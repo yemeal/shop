@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop API — техническая карта реализации</title>
+  <style>
+    :root { --ink:#182238; --muted:#66738b; --line:#dbe3ef; --paper:#f5f7fb; --panel:#fff; --blue:#3569ed; --blue-soft:#edf2ff; --green:#118261; --green-soft:#e9f8f2; --orange:#bd6b17; --orange-soft:#fff2de; --purple:#7351c5; --purple-soft:#f1edff; --red:#bd4154; --shadow:0 15px 40px rgba(39,56,91,.10); }
+    *{box-sizing:border-box} body{margin:0;min-width:320px;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif} code,pre{font-family:"Cascadia Code","SFMono-Regular",Consolas,monospace} a{color:inherit}.page{max-width:1180px;margin:0 auto;padding:34px 22px 56px}.eyebrow{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}h1,h2,h3{line-height:1.15;margin:0}h1{max-width:920px;font-size:clamp(31px,5vw,56px);letter-spacing:-.045em}h2{font-size:24px;letter-spacing:-.02em}h3{font-size:17px}p{margin:0;color:var(--muted)}.hero{display:grid;gap:14px;margin-bottom:30px}.hero p{max-width:800px;font-size:17px}.actions{display:flex;flex-wrap:wrap;gap:10px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border:1px solid var(--line);border-radius:11px;background:var(--panel);font-weight:750;text-decoration:none;cursor:pointer}.button.primary{background:var(--blue);border-color:var(--blue);color:#fff}.section{margin-top:34px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:14px}.section-head p{max-width:630px;text-align:right}.panel,.module,.flow-node,.step,.evidence{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.arch{display:grid;gap:10px}.arch-row{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:10px}.flow-node{padding:17px;display:grid;gap:10px}.flow-node .file{color:var(--blue);font:12px "Cascadia Code",monospace;overflow-wrap:anywhere}.flow-node p{font-size:13px}.arrow{display:grid;place-items:center;color:var(--blue);font-size:24px;font-weight:800}.subflow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:10px;padding-left:70px}.subflow .flow-node{box-shadow:none;border-style:dashed}.subflow .arrow{font-size:20px}.modules{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.module{padding:17px;box-shadow:none}.module .file{display:inline-block;margin-bottom:9px;color:var(--blue);font:12px "Cascadia Code",monospace}.module p{font-size:13px}.badge-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.badge{padding:5px 8px;border-radius:8px;background:var(--blue-soft);color:var(--blue);font:12px "Cascadia Code",monospace}.badge.green{background:var(--green-soft);color:var(--green)}.badge.orange{background:var(--orange-soft);color:var(--orange)}.badge.purple{background:var(--purple-soft);color:var(--purple)}.steps{display:grid;gap:8px}.step{display:grid;grid-template-columns:35px 210px 1fr;align-items:center;gap:12px;padding:13px 15px;box-shadow:none}.step .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--blue-soft);color:var(--blue);font-weight:850}.step strong{font-size:13px}.step span{color:var(--muted);font-size:13px}.business{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{padding:19px;box-shadow:none}.panel h3{margin-bottom:8px}.mapping{display:grid;gap:8px;margin-top:14px}.mapping-row{display:grid;grid-template-columns:220px 1fr;gap:13px;align-items:start;padding:11px 12px;border-radius:10px;background:var(--paper)}.mapping-row code{font-size:12px}.mapping-row span{color:var(--muted);font-size:13px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px}.tab{border:1px solid var(--line);border-radius:999px;padding:8px 13px;background:var(--panel);color:var(--muted);font-weight:750;cursor:pointer}.tab[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}.tab-panel{display:none;padding:20px}.tab-panel.active{display:grid;gap:15px}.code-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.code-block label{display:block;margin-bottom:7px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.code-block pre{position:relative;min-height:120px;margin:0;padding:14px;overflow:auto;border-radius:11px;background:#111927;color:#dbeafe;font-size:12px}.copy{position:absolute;right:8px;top:8px;padding:5px 8px;border:1px solid #44526b;border-radius:7px;background:#202c42;color:#dbeafe;cursor:pointer;font-size:11px}.callout{padding:12px 14px;border-radius:11px;background:var(--green-soft);color:#185e4d;font-size:13px}.boundary{display:flex;gap:10px;align-items:flex-start;padding:13px 15px;border-radius:12px;background:var(--orange-soft);color:#754719;font-size:13px}.boundary b{white-space:nowrap}.evidence-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.evidence{padding:17px;box-shadow:none}.evidence strong{display:block;font-size:22px;color:var(--green)}.evidence p{margin-top:5px;font-size:13px}.footer{margin-top:26px;color:var(--muted);font-size:13px}.footer code{color:var(--ink)}@media(max-width:900px){.arch-row{grid-template-columns:1fr}.arrow{transform:rotate(90deg);min-height:22px}.subflow{padding-left:0;grid-template-columns:1fr}.subflow .arrow{transform:rotate(90deg)}.modules,.business,.evidence-grid,.code-grid{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.section-head p{text-align:left}.mapping-row{grid-template-columns:1fr;gap:4px}}@media(max-width:560px){.page{padding:25px 15px 40px}.step{grid-template-columns:31px 1fr}.step span{grid-column:2}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Shop API · техническое объяснение</div>
+      <h1>Как конкретно реализован бэкенд в проекте</h1>
+      <p>Эта карта связывает HTTP-маршрут с конкретным файлом, функцией и таблицами SQLite. Смотри на неё как на путь запроса от браузера до транзакции в базе.</p>
+      <div class="actions"><a class="button primary" href="http://localhost:3000/docs" target="_blank" rel="noreferrer">Открыть Swagger ↗</a><a class="button" href="http://localhost:3000/openapi.json" target="_blank" rel="noreferrer">Открыть OpenAPI JSON</a></div>
+    </section>
+
+    <section class="section" aria-labelledby="architecture-title">
+      <div class="section-head"><h2 id="architecture-title">1. Архитектура выполнения</h2><p>Роуты знают HTTP, сервис знает правила магазина, база знает только хранение.</p></div>
+      <div class="arch">
+        <div class="arch-row">
+          <article class="flow-node"><span class="file">index.js · startServer()</span><h3>Запуск процесса</h3><p>Берёт <code>PORT</code>, вызывает инициализацию БД, создаёт Express-приложение и слушает порт.</p></article><div class="arrow" aria-hidden="true">→</div>
+          <article class="flow-node"><span class="file">db/db.js · initDB()</span><h3>Подготовка SQLite</h3><p>Открывает абсолютный путь к <code>shop.db</code>, создаёт схему, исправляет старую FK-связь и добавляет seed.</p></article><div class="arrow" aria-hidden="true">→</div>
+          <article class="flow-node"><span class="file">src/app.js · createApp()</span><h3>HTTP-приложение</h3><p>Подключает JSON, CORS, cookies, Swagger, health-check, API-роутер и единый обработчик ошибок.</p></article>
+        </div>
+        <div class="subflow"><article class="flow-node"><span class="file">src/routes/api.js</span><h3>Композиция API</h3><p>Создаёт три feature-сервиса и подключает сгруппированные роутеры.</p></article><div class="arrow" aria-hidden="true">→</div><article class="flow-node"><span class="file">src/routes/*Routes.js</span><h3>HTTP-адаптеры</h3><p>Каталог, заказ, история заказов и избранное отдельно читают <code>params/query/body</code>.</p></article><div class="arrow" aria-hidden="true">→</div><article class="flow-node"><span class="file">src/services/*Service.js</span><h3>Бизнес-сценарии</h3><p>Каждый модуль скрывает SQL и правила своей части магазина.</p></article></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="modules-title">
+      <div class="section-head"><h2 id="modules-title">2. Что находится в каждом модуле</h2><p>Имена ниже совпадают с текущими файлами проекта.</p></div>
+      <div class="modules">
+        <article class="module"><span class="file">db/db.js</span><h3>Схема и данные</h3><p>Таблицы, индексы, <code>PRAGMA foreign_keys</code>, миграция <code>favourite_user_products</code> и демо-набор.</p><div class="badge-row"><span class="badge">users</span><span class="badge">products</span><span class="badge">orders</span><span class="badge">order_items</span></div></article>
+        <article class="module"><span class="file">src/app.js</span><h3>Инфраструктура HTTP</h3><p>Middleware и границы приложения. Не содержит SQL и бизнес-правил заказа.</p><div class="badge-row"><span class="badge green">/docs</span><span class="badge green">/openapi.json</span><span class="badge green">/api/health</span></div></article>
+        <article class="module"><span class="file">src/routes/*Routes.js</span><h3>Публичный контракт</h3><p>Отдельные адаптеры для каталога, заказов, истории заказов и избранного.</p><div class="badge-row"><span class="badge orange">catalog</span><span class="badge orange">orders</span><span class="badge orange">favourites</span></div></article>
+        <article class="module"><span class="file">src/services/*Service.js</span><h3>Правила предметной области</h3><p>Сценарии разделены по функциям: каталог, заказ с транзакцией и избранное.</p><div class="badge-row"><span class="badge purple">listProducts()</span><span class="badge purple">createOrder()</span><span class="badge purple">addFavourite()</span></div></article>
+        <article class="module"><span class="file">src/errors.js</span><h3>Единые ошибки</h3><p><code>ValidationError</code> даёт 400, отсутствие ресурса — 404, ограничения SQLite — 409.</p><div class="badge-row"><span class="badge">400</span><span class="badge">404</span><span class="badge">409</span></div></article>
+        <article class="module"><span class="file">docs/openapi.js</span><h3>Контракт Swagger</h3><p>Описывает только публичные сценарии и схемы JSON, а не каждую таблицу БД.</p><div class="badge-row"><span class="badge green">OpenAPI 3.0.3</span><span class="badge green">10 paths</span></div></article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="startup-title">
+      <div class="section-head"><h2 id="startup-title">3. Что происходит при <code>npm start</code></h2><p>Инициализация выполняется до того, как порт начинает принимать запросы.</p></div>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><strong><code>node index.js</code></strong><span><code>startServer()</code> выбирает порт из <code>PORT</code> или использует <code>3000</code>.</span></div>
+        <div class="step"><span class="n">2</span><strong><code>initDB()</code></strong><span>Открывает SQLite-файл и выполняет <code>SCHEMA_SQL</code> с внешними ключами и индексами.</span></div>
+        <div class="step"><span class="n">3</span><strong>Миграция и seed</strong><span>Старое поле избранного переносится на FK к <code>users</code>; затем создаются демо-пользователь, товар, адрес и заказ.</span></div>
+        <div class="step"><span class="n">4</span><strong><code>createApp({ db })</code></strong><span>Один объект подключения передаётся в роутер и сервис, поэтому запросы используют ту же БД.</span></div>
+        <div class="step"><span class="n">5</span><strong><code>app.listen(3000)</code></strong><span>Сервер готов. При <code>SIGINT/SIGTERM</code> вызывается <code>runtime.close()</code>.</span></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="order-title">
+      <div class="section-head"><h2 id="order-title">4. Разбор одного реального запроса: <code>POST /api/orders</code></h2><p>Клиент не передаёт цену: сервер сам проверяет товар и фиксирует стоимость.</p></div>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><strong>Роут</strong><span><code>orderRoutes.js</code> получает JSON и вызывает <code>orderService.createOrder(request.body)</code>.</span></div>
+        <div class="step"><span class="n">2</span><strong>Валидация</strong><span>Проверяются <code>userId</code>, <code>deliveryAddressId</code>, непустой массив <code>items</code>, положительное количество и отсутствие дублей.</span></div>
+        <div class="step"><span class="n">3</span><strong>Проверки БД</strong><span>Пользователь существует; адрес принадлежит пользователю; каждый товар активен.</span></div>
+        <div class="step"><span class="n">4</span><strong>Транзакция</strong><span><code>BEGIN IMMEDIATE</code> → INSERT в <code>orders</code> → INSERT позиций в <code>order_items</code> → <code>COMMIT</code>. При ошибке — <code>ROLLBACK</code>.</span></div>
+        <div class="step"><span class="n">5</span><strong>Ответ</strong><span><code>getOrder(orderId)</code> собирает заказ, адрес, позиции и <code>total</code>; роут возвращает <code>201</code>.</span></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="mapping-title">
+      <div class="section-head"><h2 id="mapping-title">5. Публичный маршрут → внутренние таблицы</h2><p>Так видно, почему наружу не нужны табличные CRUD-роуты.</p></div>
+      <div class="panel mapping">
+        <div class="mapping-row"><code>GET /api/catalog/products</code><span><b>products</b> + фильтр по <b>product_categories</b>; возвращаются только <code>is_active = 1</code>.</span></div>
+        <div class="mapping-row"><code>GET /api/catalog/products/:id</code><span><b>products</b> → отдельный запрос категорий через <b>product_categories</b> и <b>categories</b>.</span></div>
+        <div class="mapping-row"><code>GET /api/catalog/categories/:id/products</code><span><b>categories</b> проверяется отдельно, затем используется тот же сценарий <code>listProducts({ categoryId })</code>.</span></div>
+        <div class="mapping-row"><code>POST /api/orders</code><span><b>users</b> + <b>user_delivery_addresses</b> + <b>products</b> → <b>orders</b> + <b>order_items</b>.</span></div>
+        <div class="mapping-row"><code>GET/POST/DELETE .../favourites</code><span><b>favourite_user_products</b> связывает пользователя и товар; сам клиент получает объекты <b>products</b>.</span></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="swagger-title">
+      <div class="section-head"><h2 id="swagger-title">6. Как это проверить в Swagger</h2><p>Вкладки ниже повторяют реальные данные seed-базы.</p></div>
+      <div class="tabs" role="tablist" aria-label="Технические сценарии"><button class="tab" type="button" role="tab" aria-selected="true" aria-controls="swagger-order" data-panel="swagger-order">Оформление заказа</button><button class="tab" type="button" role="tab" aria-selected="false" aria-controls="swagger-search" data-panel="swagger-search">Поиск товара</button><button class="tab" type="button" role="tab" aria-selected="false" aria-controls="swagger-favourite" data-panel="swagger-favourite">Избранное</button></div>
+      <article class="panel tab-panel active" id="swagger-order" role="tabpanel"><div class="code-grid"><div class="code-block"><label>POST /api/orders · JSON</label><pre id="order-json">{
+  "userId": "demo-user",
+  "deliveryAddressId": "demo-address",
+  "items": [{ "productId": "demo-product", "quantity": 2 }]
+}<button class="copy" type="button" data-copy="order-json">Копировать</button></pre></div><div class="code-block"><label>Ответ</label><pre>201 Created
+{
+  "status": "pending",
+  "total": 1999.98,
+  "items": [...]
+}</pre></div></div><div class="callout">Откройте <code>Orders → POST /orders</code> → <b>Try it out</b> → вставьте JSON → <b>Execute</b>.</div></article>
+      <article class="panel tab-panel" id="swagger-search" role="tabpanel"><div class="code-grid"><div class="code-block"><label>GET</label><pre>GET /api/catalog/products?search=демонстрационный</pre></div><div class="code-block"><label>Что проверяется</label><pre>listProducts()
+— поиск по name/sku
+— только активные товары
+— limit + offset</pre></div></div><div class="callout">Результат содержит товар <code>demo-product</code> и цену <code>999.99</code>.</div></article>
+      <article class="panel tab-panel" id="swagger-favourite" role="tabpanel"><div class="code-grid"><div class="code-block"><label>POST</label><pre>POST /api/users/demo-user/favourites
+{ "productId": "demo-product" }</pre></div><div class="code-block"><label>Внутри</label><pre>INSERT OR IGNORE
+favourite_user_products
+
+201 — добавлено
+200 — уже было</pre></div></div><div class="callout">После этого вызовите <code>GET /api/users/demo-user/favourites</code>.</div></article>
+    </section>
+
+    <section class="section" aria-labelledby="evidence-title">
+      <div class="section-head"><h2 id="evidence-title">7. Граница текущей реализации</h2><p>Это учебный вертикальный срез магазина, а не production-аккаунты.</p></div>
+      <div class="business"><div class="panel"><h3>Что уже доказано тестами</h3><div class="badge-row"><span class="badge green">catalog</span><span class="badge green">orders</span><span class="badge green">favourites</span><span class="badge green">transaction</span><span class="badge green">404 old CRUD</span></div></div><div class="boundary"><b>Важно</b><span>Авторизация пока не добавлена: в запросах используется <code>userId</code>. Следующий реальный слой — auth middleware и получение пользователя из токена, а не из body.</span></div></div>
+      <div class="evidence-grid" style="margin-top:13px"><article class="evidence"><strong>1</strong><p>интеграционный тест проходит через временную SQLite-БД</p></article><article class="evidence"><strong>10</strong><p>публичных OpenAPI paths вместо CRUD для всех таблиц</p></article><article class="evidence"><strong>200/201/404</strong><p>проверены реальные HTTP-ответы локального сервера</p></article></div>
+    </section>
+
+    <p class="footer">Файлы: <code>C:/Users/Alex/Desktop/server/index.js</code> · <code>src/routes/catalogRoutes.js</code> · <code>src/services/orderService.js</code> · <code>db/db.js</code> · Swagger: <code>http://localhost:3000/docs</code></p>
+  </main>
+  <script>
+    const tabs = [...document.querySelectorAll('[data-panel]')];
+    const panels = [...document.querySelectorAll('.tab-panel')];
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      tabs.forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
+      panels.forEach((panel) => panel.classList.toggle('active', panel.id === tab.dataset.panel));
+    }));
+    document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', async () => {
+      const text = document.getElementById(button.dataset.copy).innerText.replace('Копировать', '').trim();
+      await navigator.clipboard.writeText(text);
+      const previous = button.textContent; button.textContent = 'Скопировано';
+      setTimeout(() => { button.textContent = previous; }, 1200);
+    }));
+  </script>
+</body>
+</html>
