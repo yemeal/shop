@@ -1,4 +1,4 @@
-const { ErrorCodes } = require('./errorCodes');
+const { ErrorCodes } = require('../errors/errorCodes');
 
 function asyncHandler(handler) {
   return (request, response, next) => {

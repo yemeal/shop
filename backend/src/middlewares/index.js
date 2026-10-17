@@ -1,7 +1,7 @@
 const { validateRequest } = require('../schemas/validator');
 const { requireAuth, optionalAuth, extractToken } = require('./authMiddleware');
 const { requireRole } = require('./roleMiddleware');
-const { errorMiddleware } = require('../errors');
+const { asyncHandler, errorMiddleware } = require('./errorMiddleware');
 
 module.exports = {
   validateRequest,
@@ -9,5 +9,6 @@ module.exports = {
   optionalAuth,
   extractToken,
   requireRole,
+  asyncHandler,
   errorMiddleware,
 };

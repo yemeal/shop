@@ -5,7 +5,8 @@ const swaggerUi = require('swagger-ui-express');
 const defaultConfig = require('./config');
 const openapiDocument = require('../docs/openapi');
 const { createApiRouter } = require('./routes/api');
-const { ApiError, asyncHandler, errorMiddleware, ErrorCodes } = require('./errors');
+const { ApiError, asyncHandler, ErrorCodes } = require('./errors');
+const { errorMiddleware } = require('./middlewares');
 const { createRepositories } = require('./repositories');
 const { createServices } = require('./services');
 

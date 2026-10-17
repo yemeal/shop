@@ -7,7 +7,7 @@ const {
   ForbiddenError,
   ConflictError,
 } = require('./AppError');
-const { asyncHandler, errorMiddleware } = require('./errorMiddleware');
+const { asyncHandler, errorMiddleware } = require('../middlewares/errorMiddleware');
 
 module.exports = {
   ErrorCodes,

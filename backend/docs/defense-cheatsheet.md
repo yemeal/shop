@@ -35,8 +35,7 @@ server/
 │   ├── app.js                       # Сборка Express, Composition Root (DI)
 │   ├── errors/                      # Иерархия ошибок и машиночитаемые коды
 │   │   ├── errorCodes.js            # ErrorCodes константы
-│   │   ├── AppError.js              # ValidationError, NotFoundError, UnauthorizedError и др.
-│   │   └── errorMiddleware.js       # Безопасный JSON-обработчик ошибок
+│   │   └── AppError.js              # ValidationError, NotFoundError, UnauthorizedError и др.
 │   ├── schemas/                     # Декларативные схемы валидации и DTO
 │   │   ├── validator.js             # Валидатор запросов и middleware
 │   │   ├── commonSchemas.js         # Пагинация и идентификаторы
@@ -67,7 +66,10 @@ server/
 │   │   ├── cartService.js
 │   │   ├── shared.js                # DTO мапперы и проверки
 │   │   └── index.js                 # Фабрика createServices(repositories)
-│   ├── middlewares/                 # Авторизация, проверка ролей (admin), валидация
+│   ├── middlewares/                 # Авторизация, проверка ролей (admin), валидация, обработка ошибок
+│   │   ├── authMiddleware.js
+│   │   ├── roleMiddleware.js
+│   │   └── errorMiddleware.js       # Безопасный JSON-обработчик ошибок
 │   └── routes/                      # Тонкие HTTP-роутеры
 │       ├── api.js
 │       ├── catalogRoutes.js
