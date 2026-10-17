@@ -35,7 +35,7 @@ async function startTestServer() {
         server.close((err) => (err ? reject(err) : resolve())),
       );
       await db.close();
-      await fs.rm(directory, { recursive: true, force: true });
+      await fs.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     },
   };
 }
