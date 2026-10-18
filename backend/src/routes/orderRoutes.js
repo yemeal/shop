@@ -7,12 +7,25 @@ const {
   createOrderBodySchema,
   orderIdParamSchema,
   updateOrderStatusBodySchema,
+  adminOrderListQuerySchema,
 } = require('../schemas/orderSchemas');
 
 function createOrderRouter(orderService, authService = null) {
   const router = express.Router();
 
   const authMiddleware = authService ? requireAuth(authService) : (_req, _res, next) => next();
+
+  // получение списка всех заказов магазина (только для роли admin)
+  router.get(
+    '/',
+    authMiddleware,
+    ...(authService ? [requireRole('admin')] : []),
+    validateRequest({ query: adminOrderListQuerySchema }),
+    asyncHandler(async (request, response) => {
+      const result = await orderService.listAllOrders(request.query);
+      response.json(result);
+    }),
+  );
 
   router.post(
     '/',

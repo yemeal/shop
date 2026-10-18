@@ -96,6 +96,45 @@ class SqliteOrderRepository extends IOrderRepository {
     return Number(count?.total || 0);
   }
 
+  async listAllOrders({ limit = 50, offset = 0, status } = {}, trx = null) {
+    const executor = this._getExecutor(trx);
+    const whereClauses = [];
+    const params = [];
+    if (status) {
+      whereClauses.push('o.status = ?');
+      params.push(status);
+    }
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    const rows = await executor.all(
+      `SELECT o.id, o.user_id, o.delivery_address_id, o.status, o.created_at, o.updated_at,
+              COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total,
+              COUNT(oi.id) AS items_count,
+              u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       ${whereSql}
+       GROUP BY o.id
+       ORDER BY o.created_at DESC, o.id DESC
+       LIMIT ? OFFSET ?`,
+      ...params,
+      limit,
+      offset,
+    );
+    return rows;
+  }
+
+  async countAllOrders({ status } = {}, trx = null) {
+    const executor = this._getExecutor(trx);
+    if (status) {
+      const count = await executor.get('SELECT COUNT(*) AS total FROM orders WHERE status = ?', status);
+      return Number(count?.total || 0);
+    }
+    const count = await executor.get('SELECT COUNT(*) AS total FROM orders');
+    return Number(count?.total || 0);
+  }
+
   async updateOrderStatus(orderId, status, trx = null) {
     const executor = this._getExecutor(trx);
     await executor.run(

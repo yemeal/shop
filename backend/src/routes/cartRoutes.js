@@ -20,7 +20,7 @@ function getUserId(req) {
     throw new ForbiddenError('Доступ запрещен: нельзя обращаться к корзине другого пользователя');
   }
 
-  return req.user.id;
+  return (req.user.role === 'admin' && specifiedUserId) ? specifiedUserId : req.user.id;
 }
 
 function createCartRouter(cartService, authService = null) {

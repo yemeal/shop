@@ -67,6 +67,20 @@ function createOrderService({
     };
   }
 
+  async function listAllOrders({ limit = 50, offset = 0, status } = {}) {
+    const [rows, total] = await Promise.all([
+      orderRepository.listAllOrders({ limit, offset, status }),
+      orderRepository.countAllOrders({ status }),
+    ]);
+
+    return {
+      items: rows.map(mapOrderSummary),
+      total,
+      limit,
+      offset,
+    };
+  }
+
   async function createOrder(input) {
     if (!input || typeof input !== 'object') {
       throw new ValidationError('Тело запроса должно быть JSON-объектом');
@@ -151,6 +165,7 @@ function createOrderService({
   return {
     getOrder,
     listUserOrders,
+    listAllOrders,
     createOrder,
     updateOrderStatus,
   };

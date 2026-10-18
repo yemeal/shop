@@ -48,10 +48,15 @@ const updateOrderStatusBodySchema = z.object({
   status: z.enum(['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled']),
 });
 
+const adminOrderListQuerySchema = paginationQuerySchema.extend({
+  status: z.enum(['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled']).optional(),
+});
+
 module.exports = {
   createOrderBodySchema,
   orderIdParamSchema,
   userIdParamSchema,
   updateOrderStatusBodySchema,
   orderListQuerySchema: paginationQuerySchema,
+  adminOrderListQuerySchema,
 };
