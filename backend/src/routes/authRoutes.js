@@ -21,7 +21,7 @@ function createAuthRouter(authService) {
       });
 
       setAuthCookies(response, result);
-      response.status(201).json(result);
+      response.status(201).json({ user: result.user });
     }),
   );
 
@@ -39,7 +39,7 @@ function createAuthRouter(authService) {
       });
 
       setAuthCookies(response, result);
-      response.json(result);
+      response.json({ user: result.user });
     }),
   );
 
@@ -48,14 +48,14 @@ function createAuthRouter(authService) {
     asyncHandler(async (request, response) => {
       const { refreshToken } = extractTokens(request);
       if (!refreshToken) {
-        throw new UnauthorizedError('Отсутствует refresh-токен в cookies или теле запроса', {
+        throw new UnauthorizedError('Отсутствует refresh-токен в cookies', {
           code: 'REFRESH_TOKEN_REQUIRED',
         });
       }
 
       const result = await authService.refresh({ rawRefreshToken: refreshToken });
       setAuthCookies(response, result);
-      response.json(result);
+      response.json({ user: result.user });
     }),
   );
 

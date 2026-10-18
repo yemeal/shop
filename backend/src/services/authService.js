@@ -134,7 +134,6 @@ function createAuthService({
       accessToken,
       refreshToken: opaqueRefresh.value,
       sessionId,
-      token: accessToken, // for backward compatibility with early tests
     };
   }
 
@@ -185,7 +184,6 @@ function createAuthService({
       accessToken,
       refreshToken: opaqueRefresh.value,
       sessionId,
-      token: accessToken,
     };
   }
 
@@ -264,7 +262,6 @@ function createAuthService({
       accessToken: newAccessToken,
       refreshToken: replacementOpaque.value,
       sessionId: session.id,
-      token: newAccessToken,
     };
   }
 

@@ -16,6 +16,9 @@ const config = {
       ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
       : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
   },
+  cookieSecure: process.env.COOKIE_SECURE !== undefined
+    ? process.env.COOKIE_SECURE === 'true'
+    : false,
   keysDir: process.env.KEYS_DIR || path.resolve(__dirname, '..', 'keys'),
 };
 

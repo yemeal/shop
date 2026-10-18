@@ -1,5 +1,5 @@
 const { randomUUID } = require('node:crypto');
-const { NotFoundError } = require('../errors');
+const { NotFoundError, ConflictError } = require('../errors');
 const { mapCategory, mapProduct } = require('./shared');
 
 /**
@@ -131,7 +131,14 @@ function createCatalogService({ productRepository, categoryRepository, transacti
     if (!existing) {
       throw new NotFoundError('Товар', { productId: id });
     }
-    await productRepository.deleteProduct(id);
+    try {
+      await productRepository.deleteProduct(id);
+    } catch (err) {
+      if (err.code === 'SQLITE_CONSTRAINT' || (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))) {
+        throw new ConflictError('Нельзя удалить товар, по которому уже оформлены заказы. Чтобы скрыть его из каталога, выключите статус «В наличии» (деактивируйте его).');
+      }
+      throw err;
+    }
   }
 
   async function createCategory(input) {
@@ -149,7 +156,14 @@ function createCatalogService({ productRepository, categoryRepository, transacti
     if (!existing) {
       throw new NotFoundError('Категория', { categoryId: id });
     }
-    await categoryRepository.deleteCategory(id);
+    try {
+      await categoryRepository.deleteCategory(id);
+    } catch (err) {
+      if (err.code === 'SQLITE_CONSTRAINT' || (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))) {
+        throw new ConflictError('Нельзя удалить категорию, к которой привязаны товары или подкатегории.');
+      }
+      throw err;
+    }
   }
 
   return {

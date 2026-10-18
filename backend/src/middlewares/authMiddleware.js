@@ -27,13 +27,14 @@ function extractTokens(req) {
 }
 
 function setAuthCookies(res, { accessToken, refreshToken }) {
-  const isProduction = config.nodeEnv === 'production';
+  const isSecure =
+    config.cookieSecure !== undefined ? config.cookieSecure : config.nodeEnv === 'production';
 
   if (accessToken) {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: isProduction,
+      secure: isSecure,
       maxAge: config.jwt.accessTokenTtlSeconds * 1000,
     });
   }
@@ -42,7 +43,7 @@ function setAuthCookies(res, { accessToken, refreshToken }) {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: isProduction,
+      secure: isSecure,
       maxAge: config.jwt.refreshTokenTtlMs,
     });
   }

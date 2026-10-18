@@ -35,8 +35,8 @@ function createApp({ db, config = defaultConfig }) {
     cors({
       credentials: true,
       origin: (origin, callback) => {
-        // разрешение запросов без origin и из белого списка
-        if (!origin || allowedOrigins.includes(origin) || config.nodeEnv === 'test') {
+        // разрешение запросов без origin, при разрешении всех хостов (*) и из белого списка
+        if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin) || config.nodeEnv === 'test') {
           return callback(null, true);
         }
         return callback(null, false);
