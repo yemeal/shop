@@ -3,6 +3,7 @@ const { createOrderService } = require('./orderService');
 const { createFavouriteService } = require('./favouriteService');
 const { createAuthService } = require('./authService');
 const { createCartService } = require('./cartService');
+const { createAddressService } = require('./addressService');
 const shared = require('./shared');
 
 /**
@@ -46,12 +47,19 @@ function createServices(repositories) {
     transactionManager: repositories.transactionManager,
   });
 
+  const addressService = createAddressService({
+    addressRepository: repositories.addressRepository,
+    userRepository: repositories.userRepository,
+    transactionManager: repositories.transactionManager,
+  });
+
   return {
     catalogService,
     orderService,
     favouriteService,
     authService,
     cartService,
+    addressService,
   };
 }
 
@@ -61,6 +69,7 @@ module.exports = {
   createFavouriteService,
   createAuthService,
   createCartService,
+  createAddressService,
   createServices,
   ...shared,
 };

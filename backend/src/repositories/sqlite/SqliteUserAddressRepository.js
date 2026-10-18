@@ -60,6 +60,16 @@ class SqliteUserAddressRepository extends IUserAddressRepository {
     );
     return this.findById(id, trx);
   }
+
+  async deleteAddress(id, userId, trx = null) {
+    const executor = this._getExecutor(trx);
+    const result = await executor.run(
+      `DELETE FROM user_delivery_addresses WHERE id = ? AND user_id = ?`,
+      id,
+      userId,
+    );
+    return result?.changes > 0;
+  }
 }
 
 module.exports = { SqliteUserAddressRepository };

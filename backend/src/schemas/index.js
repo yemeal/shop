@@ -5,6 +5,7 @@ const orderSchemas = require('./orderSchemas');
 const favouriteSchemas = require('./favouriteSchemas');
 const authSchemas = require('./authSchemas');
 const cartSchemas = require('./cartSchemas');
+const addressSchemas = require('./addressSchemas');
 
 module.exports = {
   validateRequest,
@@ -15,4 +16,5 @@ module.exports = {
   ...favouriteSchemas,
   ...authSchemas,
   ...cartSchemas,
+  ...addressSchemas,
 };

@@ -28,7 +28,7 @@ function mapCategory(row) {
 
 function mapOrderSummary(row) {
   if (!row) return null;
-  return {
+  const summary = {
     id: row.id,
     userId: row.user_id,
     deliveryAddressId: row.delivery_address_id,
@@ -38,6 +38,15 @@ function mapOrderSummary(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+  if (row.user_email) {
+    summary.user = {
+      id: row.user_id,
+      email: row.user_email,
+      firstName: row.user_first_name ?? null,
+      lastName: row.user_last_name ?? null,
+    };
+  }
+  return summary;
 }
 
 function mapAddress(row) {
