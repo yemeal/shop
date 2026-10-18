@@ -85,4 +85,7 @@ test('public API describes real shop scenarios and rejects unauthenticated priva
 
   const unauthFavouritesRes = await request('/api/users/demo-user/favourites');
   assert.equal(unauthFavouritesRes.status, 401, 'GET /api/users/:id/favourites должен требовать авторизацию');
+
+  const unauthAddressesRes = await request('/api/users/demo-user/addresses');
+  assert.equal(unauthAddressesRes.status, 401, 'GET /api/users/:id/addresses должен требовать авторизацию');
 });

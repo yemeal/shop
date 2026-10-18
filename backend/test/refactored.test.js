@@ -8,6 +8,7 @@ const initDB = require('../db/db');
 const { createApp } = require('../src/app');
 const {
   IUserRepository,
+  IUserAddressRepository,
   IProductRepository,
   ICategoryRepository,
   IOrderRepository,
@@ -40,6 +41,13 @@ async function startTestServer() {
   };
 }
 
+function getCookieHeader(response) {
+  const cookieHeaders = response.headers.getSetCookie
+    ? response.headers.getSetCookie()
+    : [response.headers.get('set-cookie')].filter(Boolean);
+  return { cookie: cookieHeaders.map((c) => c.split(';')[0]).join('; ') };
+}
+
 test('Refactored Architecture & Repository Interface Conformance', async (t) => {
   const server = await startTestServer();
   t.after(() => server.close());
@@ -49,6 +57,7 @@ test('Refactored Architecture & Repository Interface Conformance', async (t) => 
   // проверка соответствия репозиториев контрактам интерфейсов (JSDoc @implements)
   const contracts = {
     userRepository: ['findById', 'findByEmail', 'exists', 'create', 'update'],
+    addressRepository: ['findById', 'findByIdAndUserId', 'listByUserId', 'createAddress', 'deleteAddress'],
     productRepository: ['findById', 'findActiveById', 'findActiveByIds', 'listProducts', 'createProduct', 'updateProduct', 'deleteProduct'],
     categoryRepository: ['findById', 'listCategories', 'countCategories', 'createCategory', 'updateCategory', 'deleteCategory'],
     orderRepository: ['createOrder', 'createOrderItems', 'findOrderById', 'findOrderItems', 'listOrdersByUserId', 'countOrdersByUserId', 'updateOrderStatus'],
@@ -63,6 +72,13 @@ test('Refactored Architecture & Repository Interface Conformance', async (t) => 
       assert.equal(typeof repos[repoName][method], 'function', `${repoName} обязан реализовывать метод ${method}`);
     }
   }
+
+  // проверка регистрации сервисов предметной области
+  const services = server.app.locals.services;
+  assert.ok(services.addressService, 'AddressService должен быть зарегистрирован в сервисах');
+  assert.equal(typeof services.addressService.listAddresses, 'function');
+  assert.equal(typeof services.addressService.createAddress, 'function');
+  assert.equal(typeof services.addressService.deleteAddress, 'function');
 });
 
 test('Unit of Work: Service layer wraps atomic repository operations in transaction and rolls back on failure', async (t) => {
@@ -108,8 +124,7 @@ test('Standardized Error Responses with Machine-Readable Codes and Details', asy
     method: 'POST',
     ...json({ email: 'demo@example.com', password: 'demo-password-hash' }),
   });
-  const { token } = await loginRes.json();
-  const authHeaders = { authorization: `Bearer ${token}` };
+  const authHeaders = getCookieHeader(loginRes);
 
   // ошибка валидации при создании заказа
   const invalidOrderRes = await request('/api/orders', {
@@ -165,15 +180,19 @@ test('Auth, Session Cookies, and Role-Based Access Control', async (t) => {
     }),
   });
   assert.equal(regRes.status, 201);
+  const regHeaders = getCookieHeader(regRes);
   const regData = await regRes.json();
-  assert.ok(regData.token);
+  assert.deepEqual(Object.keys(regData), ['user'], 'Registration body must contain ONLY user');
   assert.equal(regData.user.email, 'newuser@example.com');
   assert.equal(regData.user.role, 'user');
   assert.equal(regData.user.passwordHash, undefined); // проверка отсутствия password_hash в ответе
+  assert.equal(regData.token, undefined);
+  assert.equal(regData.accessToken, undefined);
+  assert.equal(regData.refreshToken, undefined);
 
-  // обращение к профилю с bearer токеном
+  // обращение к профилю исключительно с cookie
   const meRes = await request('/api/auth/me', {
-    headers: { authorization: `Bearer ${regData.token}` },
+    headers: regHeaders,
   });
   assert.equal(meRes.status, 200);
   const meData = await meRes.json();
@@ -183,7 +202,7 @@ test('Auth, Session Cookies, and Role-Based Access Control', async (t) => {
   const createProductForbidden = await request('/api/catalog/products', {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${regData.token}`,
+      ...regHeaders,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
@@ -205,12 +224,14 @@ test('Auth, Session Cookies, and Role-Based Access Control', async (t) => {
     }),
   });
   assert.equal(adminLoginRes.status, 200);
+  const adminHeaders = getCookieHeader(adminLoginRes);
   const adminData = await adminLoginRes.json();
+  assert.deepEqual(Object.keys(adminData), ['user'], 'Login body must contain ONLY user');
 
   const createProductAdmin = await request('/api/catalog/products', {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${adminData.token}`,
+      ...adminHeaders,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
@@ -239,8 +260,7 @@ test('Cart Management & Checkout Flow', async (t) => {
     method: 'POST',
     ...json({ email: 'demo@example.com', password: 'demo-password-hash' }),
   });
-  const { token } = await loginRes.json();
-  const authHeaders = { authorization: `Bearer ${token}` };
+  const authHeaders = getCookieHeader(loginRes);
 
   // получение начального состояния корзины
   const cartRes = await request('/api/cart', {
@@ -283,4 +303,152 @@ test('Cart Management & Checkout Flow', async (t) => {
   const emptyCart = await emptyCartRes.json();
   assert.equal(emptyCart.items.length, 0);
   assert.equal(emptyCart.total, 0);
+});
+
+test('User Address Service, Validation Schemas, and Router Architecture', async (t) => {
+  const server = await startTestServer();
+  t.after(() => server.close());
+
+  const request = (route, options) => fetch(`${server.url}${route}`, options);
+  const json = (body) => ({
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  // вход под demo-user
+  const loginRes = await request('/api/auth/login', {
+    method: 'POST',
+    ...json({ email: 'demo@example.com', password: 'demo-password-hash' }),
+  });
+  const authHeaders = getCookieHeader(loginRes);
+
+  // 1. Получение списка адресов demo-user
+  const listRes = await request('/api/users/demo-user/addresses', {
+    headers: authHeaders,
+  });
+  assert.equal(listRes.status, 200);
+  const listData = await listRes.json();
+  assert.ok(Array.isArray(listData.items));
+  assert.ok(listData.items.some((addr) => addr.id === 'demo-address'));
+  const demoAddr = listData.items.find((addr) => addr.id === 'demo-address');
+  assert.equal(demoAddr.city, 'Новосибирск');
+  assert.equal(demoAddr.country, 'Россия');
+
+  // 2. Ошибка валидации Zod схемы при пустом/неполном теле
+  const invalidAddRes = await request('/api/users/demo-user/addresses', {
+    method: 'POST',
+    headers: { ...authHeaders, 'content-type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  assert.equal(invalidAddRes.status, 400);
+  const valError = await invalidAddRes.json();
+  assert.equal(valError.error.code, 'VALIDATION_ERROR');
+  assert.ok(Array.isArray(valError.error.details));
+  const missingFields = valError.error.details.map((d) => d.field);
+  assert.ok(missingFields.includes('city'));
+  assert.ok(missingFields.includes('street'));
+  assert.ok(missingFields.includes('house'));
+
+  // 3. Ошибка валидации при пустых пробельных строках
+  const blankAddRes = await request('/api/users/demo-user/addresses', {
+    method: 'POST',
+    headers: { ...authHeaders, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      city: '   ',
+      street: '   ',
+      house: '  ',
+    }),
+  });
+  assert.equal(blankAddRes.status, 400);
+
+  // 4. Успешное создание адреса (дефолтная страна "Россия", тримминг полей)
+  const createRes = await request('/api/users/demo-user/addresses', {
+    method: 'POST',
+    headers: { ...authHeaders, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      city: ' Санкт-Петербург ',
+      street: ' Невский проспект ',
+      house: ' 28 ',
+      apartment: ' 10 ',
+    }),
+  });
+  assert.equal(createRes.status, 201);
+  const createdAddr = await createRes.json();
+  assert.ok(createdAddr.id.startsWith('addr-'));
+  assert.equal(createdAddr.country, 'Россия');
+  assert.equal(createdAddr.city, 'Санкт-Петербург');
+  assert.equal(createdAddr.street, 'Невский проспект');
+  assert.equal(createdAddr.house, '28');
+  assert.equal(createdAddr.apartment, '10');
+
+  // 5. Адрес появился в списке
+  const updatedListRes = await request('/api/users/demo-user/addresses', {
+    headers: authHeaders,
+  });
+  const updatedList = await updatedListRes.json();
+  assert.ok(updatedList.items.some((a) => a.id === createdAddr.id));
+
+  // 6. Удаление созданного адреса
+  const deleteRes = await request(`/api/users/demo-user/addresses/${createdAddr.id}`, {
+    method: 'DELETE',
+    headers: authHeaders,
+  });
+  assert.equal(deleteRes.status, 204);
+
+  // 7. Повторное удаление возвращает 404
+  const deleteAgainRes = await request(`/api/users/demo-user/addresses/${createdAddr.id}`, {
+    method: 'DELETE',
+    headers: authHeaders,
+  });
+  assert.equal(deleteAgainRes.status, 404);
+  const notFoundData = await deleteAgainRes.json();
+  assert.equal(notFoundData.error.code, 'RESOURCE_NOT_FOUND');
+
+  // 8. Попытка удаления адреса, привязанного к заказу (demo-address) -> 409 Conflict
+  const conflictDeleteRes = await request('/api/users/demo-user/addresses/demo-address', {
+    method: 'DELETE',
+    headers: authHeaders,
+  });
+  assert.equal(conflictDeleteRes.status, 409);
+  const conflictData = await conflictDeleteRes.json();
+  assert.equal(conflictData.error.code, 'CONFLICT');
+
+  // 9. IDOR защита: другой пользователь не может просматривать или изменять адреса demo-user
+  const regUser2 = await request('/api/auth/register', {
+    method: 'POST',
+    ...json({
+      email: 'user2@example.com',
+      password: 'password123',
+      firstName: 'User',
+      lastName: 'Two',
+    }),
+  });
+  const user2Headers = getCookieHeader(regUser2);
+
+  const idorGetRes = await request('/api/users/demo-user/addresses', {
+    headers: user2Headers,
+  });
+  assert.equal(idorGetRes.status, 403);
+  const idorErr = await idorGetRes.json();
+  assert.equal(idorErr.error.code, 'FORBIDDEN');
+
+  const idorPostRes = await request('/api/users/demo-user/addresses', {
+    method: 'POST',
+    headers: { ...user2Headers, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      city: 'Казань',
+      street: 'Баумана',
+      house: '1',
+    }),
+  });
+  assert.equal(idorPostRes.status, 403);
+
+  // 10. Прямой вызов AddressService проверяет существование пользователя
+  const addressService = server.app.locals.services.addressService;
+  await assert.rejects(
+    async () => {
+      await addressService.listAddresses('non-existent-user-id');
+    },
+    (err) => err.code === 'RESOURCE_NOT_FOUND',
+  );
 });

@@ -30,6 +30,13 @@ async function startTestServer() {
   };
 }
 
+function getCookieHeader(response) {
+  const cookieHeaders = response.headers.getSetCookie
+    ? response.headers.getSetCookie()
+    : [response.headers.get('set-cookie')].filter(Boolean);
+  return { cookie: cookieHeaders.map((c) => c.split(';')[0]).join('; ') };
+}
+
 test('Security & IDOR Protections: Users cannot access or tamper with other users resources', async (t) => {
   const server = await startTestServer();
   t.after(() => server.close());
@@ -50,8 +57,9 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
     }),
   });
   assert.equal(regAlice.status, 201);
+  const aliceCookies = getCookieHeader(regAlice);
   const alice = await regAlice.json();
-  const aliceToken = alice.accessToken;
+  assert.deepEqual(Object.keys(alice), ['user'], 'Registration must return ONLY user');
 
   // регистрация пользователя б
   const regBob = await request('/api/auth/register', {
@@ -63,8 +71,9 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
     }),
   });
   assert.equal(regBob.status, 201);
+  const bobCookies = getCookieHeader(regBob);
   const bob = await regBob.json();
-  const bobToken = bob.accessToken;
+  assert.deepEqual(Object.keys(bob), ['user'], 'Registration must return ONLY user');
 
   // проверка хеширования пароля через scrypt
   const userARow = await server.db.get('SELECT password_hash FROM users WHERE id = ?', alice.user.id);
@@ -75,7 +84,7 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
 
   // попытка просмотра чужих заказов
   const aliceViewsBobOrders = await request(`/api/users/${bob.user.id}/orders`, {
-    headers: { authorization: `Bearer ${aliceToken}` },
+    headers: aliceCookies,
   });
   assert.equal(aliceViewsBobOrders.status, 403);
   const ordersError = await aliceViewsBobOrders.json();
@@ -85,7 +94,7 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
   const aliceAddsBobFavourite = await request(`/api/users/${bob.user.id}/favourites`, {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${aliceToken}`,
+      ...aliceCookies,
       'content-type': 'application/json',
     },
     body: JSON.stringify({ productId: 'demo-product' }),
@@ -94,7 +103,7 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
 
   // попытка доступа к чужой корзине через query
   const aliceAccessesBobCart = await request(`/api/cart?userId=${bob.user.id}`, {
-    headers: { authorization: `Bearer ${aliceToken}` },
+    headers: aliceCookies,
   });
   assert.equal(aliceAccessesBobCart.status, 403);
 
@@ -102,7 +111,7 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
   const invalidCategory = await request('/api/catalog/categories', {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${aliceToken}`, // токен пользователя без прав администратора
+      ...aliceCookies, // куки пользователя без прав администратора
       'content-type': 'application/json',
     },
     body: JSON.stringify({}),
@@ -114,12 +123,14 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
     method: 'POST',
     ...json({ email: 'admin@example.com', password: 'demo-admin-password-hash' }),
   });
+  const adminCookies = getCookieHeader(adminLogin);
   const admin = await adminLogin.json();
+  assert.deepEqual(Object.keys(admin), ['user'], 'Login must return ONLY user');
 
   const emptyCategory = await request('/api/catalog/categories', {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${admin.token}`,
+      ...adminCookies,
       'content-type': 'application/json',
     },
     body: JSON.stringify({}),
@@ -127,6 +138,21 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
   assert.equal(emptyCategory.status, 400);
   const catError = await emptyCategory.json();
   assert.equal(catError.error.code, 'VALIDATION_ERROR');
+
+  // проверка доступа к общему списку заказов магазина (только для роли admin)
+  const unauthOrders = await request('/api/orders');
+  assert.equal(unauthOrders.status, 401);
+
+  const aliceOrders = await request('/api/orders', { headers: aliceCookies });
+  assert.equal(aliceOrders.status, 403);
+  const forbiddenError = await aliceOrders.json();
+  assert.equal(forbiddenError.error.code, 'FORBIDDEN');
+
+  const adminOrders = await request('/api/orders', { headers: adminCookies });
+  assert.equal(adminOrders.status, 200);
+  const adminOrdersData = await adminOrders.json();
+  assert.ok(Array.isArray(adminOrdersData.items));
+  assert.ok(adminOrdersData.total >= 1);
 
   // параллельное выполнение транзакций через очередь
   const txManager = server.app.locals.repositories.transactionManager;

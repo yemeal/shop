@@ -67,26 +67,26 @@ test('RS256 JWT Access Token and Opaque Refresh Token with TokenFamily Rotation'
   const registerCookies = parseCookies(registerRes);
   const regBody = await registerRes.json();
 
-  assert.ok(regBody.accessToken, 'Must return RS256 access JWT');
-  assert.ok(regBody.refreshToken, 'Must return opaque refresh token');
-  assert.ok(regBody.sessionId, 'Must return sessionId representing the device token family');
+  assert.deepEqual(Object.keys(regBody), ['user'], 'Body must contain ONLY user');
+  assert.equal(regBody.accessToken, undefined);
+  assert.equal(regBody.refreshToken, undefined);
+  assert.equal(regBody.sessionId, undefined);
+  assert.equal(regBody.token, undefined);
 
-  // проверка структуры jwt и алгоритма rs256
-  const parts = regBody.accessToken.split('.');
+  // проверка структуры jwt и алгоритма rs256 в установленной куке
+  assert.ok(registerCookies.access_token, 'Must set access_token cookie');
+  assert.ok(registerCookies.refresh_token, 'Must set refresh_token cookie');
+  const parts = registerCookies.access_token.split('.');
   assert.equal(parts.length, 3);
   const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
   assert.equal(header.alg, 'RS256');
   assert.equal(header.typ, 'at+jwt');
 
-  // проверка установки кук
-  assert.ok(registerCookies.access_token);
-  assert.ok(registerCookies.refresh_token);
-
-  // ротация токена через /api/auth/refresh
+  // ротация токена через /api/auth/refresh с кукой
   const refreshRes = await request('/api/auth/refresh', {
     method: 'POST',
     headers: {
-      cookie: `refresh_token=${regBody.refreshToken}`,
+      cookie: `refresh_token=${registerCookies.refresh_token}`,
       'content-type': 'application/json',
     },
   });
@@ -94,9 +94,10 @@ test('RS256 JWT Access Token and Opaque Refresh Token with TokenFamily Rotation'
   const refreshBody = await refreshRes.json();
   const refreshedCookies = parseCookies(refreshRes);
 
-  assert.ok(refreshBody.accessToken);
-  assert.ok(refreshBody.refreshToken);
-  assert.notEqual(refreshBody.refreshToken, regBody.refreshToken, 'Refresh token must rotate to a new random string');
+  assert.deepEqual(Object.keys(refreshBody), ['user'], 'Body must contain ONLY user on refresh');
+  assert.equal(refreshBody.accessToken, undefined);
+  assert.equal(refreshBody.refreshToken, undefined);
+  assert.notEqual(refreshedCookies.refresh_token, registerCookies.refresh_token, 'Refresh token must rotate to a new random string');
   assert.ok(refreshedCookies.access_token);
   assert.ok(refreshedCookies.refresh_token);
 
@@ -104,7 +105,7 @@ test('RS256 JWT Access Token and Opaque Refresh Token with TokenFamily Rotation'
   const reuseRes = await request('/api/auth/refresh', {
     method: 'POST',
     headers: {
-      cookie: `refresh_token=${regBody.refreshToken}`,
+      cookie: `refresh_token=${registerCookies.refresh_token}`,
       'content-type': 'application/json',
     },
   });
@@ -116,7 +117,7 @@ test('RS256 JWT Access Token and Opaque Refresh Token with TokenFamily Rotation'
   const revokedRes = await request('/api/auth/refresh', {
     method: 'POST',
     headers: {
-      cookie: `refresh_token=${refreshBody.refreshToken}`,
+      cookie: `refresh_token=${refreshedCookies.refresh_token}`,
       'content-type': 'application/json',
     },
   });
@@ -141,7 +142,9 @@ test('Automatic Transparent Access Refresh when Access Token is Expired', async 
     }),
   });
   assert.equal(loginRes.status, 200);
+  const loginCookies = parseCookies(loginRes);
   const loginData = await loginRes.json();
+  assert.deepEqual(Object.keys(loginData), ['user'], 'Body must contain ONLY user');
 
   // выпуск просроченного access-токена
   const expiredAccessToken = authService.issuer.issue(
@@ -149,10 +152,10 @@ test('Automatic Transparent Access Refresh when Access Token is Expired', async 
     -10, // просрочен на 10 секунд
   );
 
-  // запрос с просроченным access-токеном и валидным refresh-токеном
+  // запрос с просроченным access-токеном и валидным refresh-токеном в куках
   const autoRefreshRes = await fetch(`${server.url}/api/auth/me`, {
     headers: {
-      cookie: `access_token=${expiredAccessToken}; refresh_token=${loginData.refreshToken}`,
+      cookie: `access_token=${expiredAccessToken}; refresh_token=${loginCookies.refresh_token}`,
     },
   });
 
@@ -165,7 +168,7 @@ test('Automatic Transparent Access Refresh when Access Token is Expired', async 
   const cookies = parseCookies(autoRefreshRes);
   assert.ok(cookies.access_token);
   assert.ok(cookies.refresh_token);
-  assert.notEqual(cookies.refresh_token, loginData.refreshToken, 'Refresh token must be rotated');
+  assert.notEqual(cookies.refresh_token, loginCookies.refresh_token, 'Refresh token must be rotated');
 });
 
 test('Multi-Device Token Family Independence', async (t) => {
@@ -184,7 +187,9 @@ test('Multi-Device Token Family Independence', async (t) => {
     headers: { 'user-agent': 'Mobile-iPhone', 'content-type': 'application/json' },
     body: JSON.stringify({ email: 'demo@example.com', password: 'demo-password-hash' }),
   });
+  const deviceACookies = parseCookies(deviceARes);
   const deviceA = await deviceARes.json();
+  assert.deepEqual(Object.keys(deviceA), ['user']);
 
   // устройство б
   const deviceBRes = await request('/api/auth/login', {
@@ -192,16 +197,17 @@ test('Multi-Device Token Family Independence', async (t) => {
     headers: { 'user-agent': 'Desktop-Chrome', 'content-type': 'application/json' },
     body: JSON.stringify({ email: 'demo@example.com', password: 'demo-password-hash' }),
   });
+  const deviceBCookies = parseCookies(deviceBRes);
   const deviceB = await deviceBRes.json();
+  assert.deepEqual(Object.keys(deviceB), ['user']);
 
-  assert.notEqual(deviceA.sessionId, deviceB.sessionId, 'Each device must receive its own session and TokenFamily');
+  assert.notEqual(deviceACookies.refresh_token, deviceBCookies.refresh_token, 'Each device must receive its own session and TokenFamily in cookies');
 
   // выход с устройства а
   const logoutARes = await request('/api/auth/logout', {
     method: 'POST',
     headers: {
-      cookie: `refresh_token=${deviceA.refreshToken}`,
-      authorization: `Bearer ${deviceA.accessToken}`,
+      cookie: `refresh_token=${deviceACookies.refresh_token}; access_token=${deviceACookies.access_token}`,
     },
   });
   assert.equal(logoutARes.status, 200);
@@ -209,13 +215,13 @@ test('Multi-Device Token Family Independence', async (t) => {
   // проверка отклонения обновления для устройства а
   const refreshARes = await request('/api/auth/refresh', {
     method: 'POST',
-    headers: { cookie: `refresh_token=${deviceA.refreshToken}` },
+    headers: { cookie: `refresh_token=${deviceACookies.refresh_token}` },
   });
   assert.equal(refreshARes.status, 401);
 
   // проверка работоспособности сессии устройства б
   const meBRes = await request('/api/auth/me', {
-    headers: { authorization: `Bearer ${deviceB.accessToken}` },
+    headers: { cookie: `access_token=${deviceBCookies.access_token}` },
   });
   assert.equal(meBRes.status, 200);
 });
