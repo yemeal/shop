@@ -7,6 +7,7 @@ const { createUserOrderRouter } = require('./userOrderRoutes');
 const { createFavouriteRouter } = require('./favouriteRoutes');
 const { createAuthRouter } = require('./authRoutes');
 const { createCartRouter } = require('./cartRoutes');
+const { createAddressRouter } = require('./addressRoutes');
 
 /**
  * создание главного api роутера с внедрением зависимостей
@@ -34,6 +35,7 @@ function createApiRouter(dbOrContainer) {
   router.use('/orders', createOrderRouter(services.orderService, services.authService));
   router.use('/users', createUserOrderRouter(services.orderService, services.authService));
   router.use('/users', createFavouriteRouter(services.favouriteService, services.authService));
+  router.use('/users', createAddressRouter(services.addressService, services.authService));
   router.use('/cart', createCartRouter(services.cartService, services.authService));
 
   return router;
