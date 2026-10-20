@@ -1,0 +1,23 @@
+# зависимости
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# сборка и временные файлы
+dist/
+coverage/
+
+# git и служебные файлы
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+
+# ide и редакторы
+.idea/
+.vscode/
+
+# переменные окружения
+.env
+.env.*
