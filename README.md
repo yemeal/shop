@@ -8,35 +8,7 @@
 
 ---
 
-## Оглавление
-
-1. [Архитектура развертывания](#-архитектура-развертывания)
-2. [Системные требования](#-системные-требования)
-3. [Быстрый старт (Quick Start)](#-быстрый-старт-quick-start)
-4. [Конфигурация переменных окружения (.env)](#-конфигурация-переменных-окружения-env)
-5. [Тестовые учетные записи и наполнение каталога (Seed)](#-тестовые-учетные-записи-и-наполнение-каталога-seed)
-6. [Пошаговое развертывание на удаленном сервере (Ubuntu / Debian VPS)](#-пошаговое-развертывание-на-удаленном-сервере-ubuntu--debian-vps)
-7. [Настройка домена и HTTPS (SSL Let's Encrypt)](#-настройка-домена-и-https-ssl-lets-encrypt)
-8. [Управление контейнерами и полезные команды](#-управление-контейнерами-и-полезные-команды)
-9. [Резервное копирование и восстановление базы данных](#-резервное-копирование-и-восстановление-базы-данных)
-10. [Локальная разработка без Docker](#-локальная-разработка-без-docker)
-11. [Часто встречающиеся проблемы (Troubleshooting)](#-часто-встречающиеся-проблемы-troubleshooting)
-
----
-
-## 💻 Системные требования
-
-- **Операционная система:** Linux (Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Alpine), macOS или Windows с установленным WSL2.
-- **Docker Engine:** версия 24.0.0 или новее.
-- **Docker Compose:** плагин Compose V2 (`docker compose` встроен в современный Docker).
-- **Свободная память:** от 1 ГБ RAM (рекомендуется от 2 ГБ для плавной сборки образов на сервере).
-- **Свободные порты:**
-  - `80` (для веб-сайта и Nginx)
-  - `3000` (опционально, для прямого доступа к API бэкенда)
-
----
-
-## 🚀 Быстрый старт (Quick Start)
+## Быстрый старт
 
 Развертывание всего проекта занимает 3 команды:
 
@@ -63,11 +35,6 @@ docker compose ps
 ```
 Оба контейнера (`shop-backend` и `shop-frontend`) должны иметь статус `healthy` (или `running`).
 
-### 5. Доступ к приложению:
-- 🌐 **Интернет-магазин (Фронтенд):** [http://localhost](http://localhost) (или `http://<IP-вашего-сервера>`)
-- 📖 **Интерактивная документация Swagger UI:** [http://localhost/docs](http://localhost/docs)
-- 🩺 **Проверка состояния бэкенда:** [http://localhost/api/health](http://localhost/api/health)
-
 ---
 
 ## ⚙ Конфигурация переменных окружения (.env)
@@ -88,7 +55,7 @@ docker compose ps
 
 ---
 
-## 👥 Тестовые учетные записи и наполнение каталога (Seed)
+## Тестовые учетные записи и наполнение каталога
 
 Бэкенд автоматически создает структуру базы данных при первом старте.
 
@@ -99,11 +66,6 @@ docker compose ps
 - 👑 **Администратор магазина** (доступ к админ-панели управления товарами, категориями и заказами):
   - **Email:** `admin@example.com`
   - **Пароль:** `demo-admin-password-hash`
-
-> 💡 **Совет:** Вы можете зарегистрировать свой личный аккаунт через веб-интерфейс, а затем при необходимости выдать ему права администратора в БД:
-> ```bash
-> docker compose exec backend node -e "const initDB = require('./db/db'); (async () => { const db = await initDB('/app/data/shop.db'); await db.run(\"UPDATE users SET role = 'admin' WHERE email = 'ваш@email.com'\"); console.log('Права администратора выданы!'); await db.close(); })()"
-> ```
 
 ### Первичное наполнение реальными товарами с фотографиями:
 Чтобы наполнить магазин 21 реалистичным товаром с описаниями, ценами, категориями и качественными изображениями, выполните одну команду:
@@ -174,142 +136,7 @@ docker compose exec backend npm run seed
 
 ---
 
-## 🔒 Настройка домена и HTTPS (SSL Let's Encrypt)
-
-Для полноценной работы в продакшене рекомендуется подключить домен и настроить бесплатный SSL-сертификат.
-
-### Вариант 1: Использование Nginx на хост-сервере с Certbot (Рекомендуемый)
-
-1. Измените в `.env` порт фронтенда, чтобы освободить порт 80 для системного Nginx:
-   ```ini
-   FRONTEND_PORT=8080
-   COOKIE_SECURE=true
-   ALLOWED_ORIGINS=https://your-domain.com
-   ```
-   Перезапустите контейнеры:
-   ```bash
-   docker compose up -d
-   ```
-
-2. Установите Nginx и Certbot на хост-машине:
-   ```bash
-   apt update && apt install -y nginx certbot python3-certbot-nginx
-   ```
-
-3. Создайте конфигурацию сайта `/etc/nginx/sites-available/shop.conf`:
-   ```nginx
-   server {
-       server_name your-domain.com www.your-domain.com;
-
-       location / {
-           proxy_pass http://127.0.0.1:8080;
-           proxy_http_version 1.1;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection "upgrade";
-       }
-   }
-   ```
-
-4. Активируйте конфигурацию и выпустите сертификат:
-   ```bash
-   ln -s /etc/nginx/sites-available/shop.conf /etc/nginx/sites-enabled/
-   nginx -t && systemctl reload nginx
-   certbot --nginx -d your-domain.com -d www.your-domain.com
-   ```
-
-Certbot автоматически настроит перенаправление с HTTP на HTTPS и автоматическое продление сертификата.
-
----
-
-## 🛠 Управление контейнерами и полезные команды
-
-### Просмотр статуса контейнеров:
-```bash
-docker compose ps
-```
-
-### Просмотр логов в реальном времени:
-```bash
-# Все логи:
-docker compose logs -f
-
-# Логи бэкенда:
-docker compose logs -f backend
-
-# Логи фронтенда (Nginx):
-docker compose logs -f frontend
-```
-
-### Остановка и запуск:
-```bash
-# Остановка контейнеров:
-docker compose stop
-
-# Запуск остановленных контейнеров:
-docker compose start
-
-# Полная остановка с удалением контейнеров (данные в томе сохраняются):
-docker compose down
-
-# Перезапуск сервисов:
-docker compose restart
-```
-
-### Обновление проекта до последней версии с Git:
-```bash
-git pull
-docker compose up -d --build
-```
-
-### Запуск команд внутри контейнера бэкенда:
-```bash
-# Открыть интерактивную оболочку sh в контейнере:
-docker compose exec backend sh
-
-# Запустить тесты бэкенда внутри контейнера:
-docker compose exec backend npm test
-
-# Запустить скрипт наполнения товарами:
-docker compose exec backend npm run seed
-```
-
----
-
-## 💾 Резервное копирование и восстановление базы данных
-
-База данных SQLite хранится в файле `/app/data/shop.db` внутри именованного тома `shop-backend-data`.
-
-### Создание резервной копии на хост-систему:
-```bash
-# Создание безопасного снапшота базы данных прямо на лету:
-docker compose exec backend sqlite3 /app/data/shop.db ".backup '/app/data/backup_temp.db'"
-docker cp shop-backend:/app/data/backup_temp.db ./shop_backup_$(date +%F_%H%M%S).db
-docker compose exec backend rm /app/data/backup_temp.db
-```
-*Или просто скопируйте файл:*
-```bash
-docker cp shop-backend:/app/data/shop.db ./shop_backup.db
-```
-
-### Восстановление базы данных из резервной копии:
-```bash
-# Остановка бэкенда перед восстановлением
-docker compose stop backend
-
-# Копирование бэкапа в контейнер
-docker cp ./shop_backup.db shop-backend:/app/data/shop.db
-
-# Запуск бэкенда
-docker compose start backend
-```
-
----
-
-## 💻 Локальная разработка без Docker
+## Локальная разработка без Docker
 
 Если требуется разрабатывать код локально на своей машине:
 
@@ -336,33 +163,3 @@ npm test          # тесты бэкенда (11 тестов)
 npm run frontend:test  # тесты фронтенда (Vitest)
 ```
 
----
-
-## ❓ Часто встречающиеся проблемы (Troubleshooting)
-
-### 1. `Error: bind: address already in use` (Порт 80 или 3000 занят)
-- **Причина:** На сервере уже запущен другой сервис (например, системный Apache или Nginx).
-- **Решение:** 
-  1. Выясните, какой процесс занимает порт: `sudo lsof -i :80` или `sudo netstat -tulpn | grep :80`.
-  2. Либо измените внешний порт в `.env` (например, `FRONTEND_PORT=8080`), затем выполните `docker compose up -d`.
-
-### 2. После логина пользователя сразу выбрасывает (не сохраняется авторизация)
-- **Причина:** В `.env` включен флаг `COOKIE_SECURE=true`, но сайт открывается по незащищенному протоколу `http://...`. Браузеры Chrome и Firefox в целях безопасности игнорируют Cookie с флагом `Secure`, полученные по HTTP.
-- **Решение:** В файле `.env` установите `COOKIE_SECURE=false` и перезапустите бэкенд: `docker compose up -d backend`.
-
-### 3. Ошибка CORS при обращении к API
-- **Причина:** Запрос отправлен с домена/IP, которого нет в `ALLOWED_ORIGINS`.
-- **Решение:** В `.env` добавьте ваш домен в `ALLOWED_ORIGINS` (например, `ALLOWED_ORIGINS=http://my-ip,http://my-domain.com`) или временно установите `ALLOWED_ORIGINS=*`.
-
-### 4. Контейнер `shop-backend` перезапускается со статусом unhealthy
-- **Причина:** Возможная ошибка доступа к каталогу `/app/data` или повреждение базы данных.
-- **Решение:** Проверьте логи контейнера:
-  ```bash
-  docker compose logs backend
-  ```
-
----
-
-## 📄 Лицензия
-
-Проект распространяется для учебных и коммерческих целей. Разработано с использованием лучших практик современной веб-разработки и контейнеризации.
