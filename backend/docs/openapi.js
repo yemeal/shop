@@ -340,6 +340,28 @@ const paths = {
 
   // заказы
   '/orders': {
+    get: {
+      tags: ['Admin Orders'],
+      summary: 'Список всех заказов магазина (только для роли admin)',
+      parameters: [
+        ...paginationParameters,
+        {
+          name: 'status',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: ['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled'],
+          },
+          description: 'Фильтрация по статусу заказа',
+        },
+      ],
+      security: [{ BearerAuth: [] }, { CookieAuth: [] }],
+      responses: {
+        '200': json(paginationSchema('OrderSummary'), 'Список всех заказов магазина'),
+        '401': errorResponses['401'],
+        '403': errorResponses['403'],
+      },
+    },
     post: {
       tags: ['Orders'],
       summary: 'Оформить заказ напрямую',
@@ -460,6 +482,60 @@ const paths = {
       },
     },
   },
+
+  // адреса доставки
+  '/users/{userId}/addresses': {
+    get: {
+      tags: ['Addresses'],
+      summary: 'Список адресов доставки пользователя',
+      parameters: [pathParameter('userId')],
+      responses: {
+        '200': json({
+          type: 'object',
+          properties: { items: { type: 'array', items: ref('Address') } },
+        }, 'Список адресов доставки'),
+        '400': errorResponses['400'],
+        '401': errorResponses['401'],
+        '403': errorResponses['403'],
+        '404': errorResponses['404'],
+      },
+    },
+    post: {
+      tags: ['Addresses'],
+      summary: 'Добавить новый адрес доставки',
+      parameters: [pathParameter('userId')],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: ref('AddressCreate'),
+          },
+        },
+      },
+      responses: {
+        '201': json('Address', 'Адрес успешно добавлен'),
+        '400': errorResponses['400'],
+        '401': errorResponses['401'],
+        '403': errorResponses['403'],
+        '404': errorResponses['404'],
+      },
+    },
+  },
+  '/users/{userId}/addresses/{addressId}': {
+    delete: {
+      tags: ['Addresses'],
+      summary: 'Удалить адрес доставки',
+      parameters: [pathParameter('userId'), pathParameter('addressId')],
+      responses: {
+        '204': { description: 'Адрес успешно удалён' },
+        '400': errorResponses['400'],
+        '401': errorResponses['401'],
+        '403': errorResponses['403'],
+        '404': errorResponses['404'],
+        '409': errorResponses['409'],
+      },
+    },
+  },
 };
 
 const schemas = {
@@ -490,10 +566,9 @@ const schemas = {
   },
   AuthResponse: {
     type: 'object',
+    required: ['user'],
     properties: {
       user: ref('User'),
-      token: { type: 'string' },
-      expiresAt: { type: 'string' },
     },
   },
   Product: {
@@ -615,6 +690,17 @@ const schemas = {
       lineTotal: { type: 'number' },
     },
   },
+  AddressCreate: {
+    type: 'object',
+    required: ['city', 'street', 'house'],
+    properties: {
+      country: { type: 'string', example: 'Россия', default: 'Россия' },
+      city: { type: 'string', example: 'Москва' },
+      street: { type: 'string', example: 'ул. Тверская' },
+      house: { type: 'string', example: '12' },
+      apartment: { type: 'string', nullable: true, example: '45' },
+    },
+  },
   Address: {
     type: 'object',
     properties: {
@@ -670,6 +756,7 @@ module.exports = {
     { name: 'Orders', description: 'Оформление и история заказов' },
     { name: 'Admin Orders', description: 'Управление статусами заказов' },
     { name: 'Favourites', description: 'Избранные товары' },
+    { name: 'Addresses', description: 'Управление сохраненными адресами доставки' },
   ],
   components: {
     securitySchemes: {
