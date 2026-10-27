@@ -43,8 +43,8 @@ export function useProductActions() {
       const qtySuffix = quantity > 1 ? ` (${quantity} шт.)` : '';
       ElMessage.success(`«${product.name}»${qtySuffix} добавлен в корзину`);
       return true;
-    } catch (err: any) {
-      ElMessage.error(err?.message || 'Не удалось добавить товар в корзину');
+    } catch (err) {
+      ElMessage.error((err as Error)?.message || 'Не удалось добавить товар в корзину');
       return false;
     }
   }
@@ -65,8 +65,8 @@ export function useProductActions() {
         ElMessage.info(`«${product.name}» удален из избранного`);
       }
       return added;
-    } catch (err: any) {
-      ElMessage.error(err?.message || 'Ошибка обновления избранного');
+    } catch (err) {
+      ElMessage.error((err as Error)?.message || 'Ошибка обновления избранного');
       return false;
     }
   }

@@ -173,7 +173,10 @@ export const api = {
   auth: {
     // регистрация нового пользователя
     register(input: { email: string; password: string; firstName?: string; lastName?: string }) {
-      return request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(input) });
+      return request<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      });
     },
     // вход в систему по email и паролю
     login(input: { email: string; password: string }) {
@@ -229,16 +232,18 @@ export const api = {
   // методы каталога товаров и категорий
   catalog: {
     // получение списка товаров с фильтрацией и пагинацией
-    products(params: {
-      search?: string;
-      categoryId?: string;
-      minPrice?: number;
-      maxPrice?: number;
-      sortBy?: 'created_at' | 'price' | 'name';
-      sortOrder?: 'asc' | 'desc';
-      limit?: number;
-      offset?: number;
-    } = {}) {
+    products(
+      params: {
+        search?: string;
+        categoryId?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        sortBy?: 'created_at' | 'price' | 'name';
+        sortOrder?: 'asc' | 'desc';
+        limit?: number;
+        offset?: number;
+      } = {},
+    ) {
       const query = new URLSearchParams();
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null && value !== '') {
@@ -391,7 +396,13 @@ export const api = {
     // добавление нового адреса пользователя
     create(
       userId: string,
-      input: { country?: string; city: string; street: string; house: string; apartment?: string | null },
+      input: {
+        country?: string;
+        city: string;
+        street: string;
+        house: string;
+        apartment?: string | null;
+      },
     ) {
       return request<DeliveryAddress>(`/users/${userId}/addresses`, {
         method: 'POST',

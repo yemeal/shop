@@ -25,13 +25,19 @@ const rules: FormRules = {
   house: [{ required: true, message: 'Укажите номер дома', trigger: 'blur' }],
 };
 
-function onFieldInput() {
-  emit('update:modelValue', props.modelValue);
+function updateField(field: keyof AddressFormData, value: string) {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    [field]: value,
+  });
 }
 
 async function validate(): Promise<boolean> {
   if (!formRef.value) return false;
-  return formRef.value.validate().then(() => true).catch(() => false);
+  return formRef.value
+    .validate()
+    .then(() => true)
+    .catch(() => false);
 }
 
 function resetFields() {
@@ -45,20 +51,26 @@ defineExpose({
 </script>
 
 <template>
-  <el-form ref="formRef" :model="modelValue" :rules="rules" label-position="top" class="address-form">
+  <el-form
+    ref="formRef"
+    :model="modelValue"
+    :rules="rules"
+    label-position="top"
+    class="address-form"
+  >
     <div class="form-row">
       <el-form-item label="Город" prop="city" class="col-6">
         <el-input
-          v-model="modelValue.city"
+          :model-value="modelValue.city"
           placeholder="Например, Москва"
-          @input="onFieldInput"
+          @update:model-value="(val: string) => updateField('city', val)"
         />
       </el-form-item>
       <el-form-item label="Улица" prop="street" class="col-6">
         <el-input
-          v-model="modelValue.street"
+          :model-value="modelValue.street"
           placeholder="Например, Тверская"
-          @input="onFieldInput"
+          @update:model-value="(val: string) => updateField('street', val)"
         />
       </el-form-item>
     </div>
@@ -66,16 +78,16 @@ defineExpose({
     <div class="form-row">
       <el-form-item label="Дом / Корпус" prop="house" class="col-6">
         <el-input
-          v-model="modelValue.house"
+          :model-value="modelValue.house"
           placeholder="10"
-          @input="onFieldInput"
+          @update:model-value="(val: string) => updateField('house', val)"
         />
       </el-form-item>
       <el-form-item label="Квартира / Офис" prop="apartment" class="col-6">
         <el-input
-          v-model="modelValue.apartment"
+          :model-value="modelValue.apartment || ''"
           placeholder="42"
-          @input="onFieldInput"
+          @update:model-value="(val: string) => updateField('apartment', val)"
         />
       </el-form-item>
     </div>

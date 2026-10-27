@@ -17,7 +17,8 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const { getProductImageUrl, handleImageError, isFavorite, addToCart, toggleFavorite } = useProductActions();
+const { getProductImageUrl, handleImageError, isFavorite, addToCart, toggleFavorite } =
+  useProductActions();
 
 const isFav = computed(() => isFavorite(props.product.id));
 const formattedPrice = computed(() => formatCurrency(props.product.price));
@@ -52,7 +53,7 @@ function navigateToDetail() {
         loading="lazy"
         @error="onImageError"
       />
-      
+
       <!-- бейдж наличия товара -->
       <span v-if="product.isActive" class="stock-badge in-stock">В наличии</span>
       <span v-else class="stock-badge out-of-stock">Нет в наличии</span>

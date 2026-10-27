@@ -31,8 +31,8 @@ export const useFavoritesStore = defineStore('favorites', () => {
       // получение списка с бэкенда
       const response = await api.favourites.list(userId);
       items.value = response.items || [];
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось загрузить избранное';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось загрузить избранное';
     } finally {
       isLoading.value = false;
     }
@@ -54,8 +54,8 @@ export const useFavoritesStore = defineStore('favorites', () => {
         items.value.push(product);
         return true;
       }
-    } catch (err: any) {
-      error.value = err?.message || 'Ошибка обновления избранного';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Ошибка обновления избранного';
       throw err;
     }
   }

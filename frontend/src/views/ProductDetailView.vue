@@ -5,18 +5,12 @@ import MainLayout from '@/components/layout/MainLayout.vue';
 import { api, type Product } from '@/api';
 import { useProductActions } from '@/composables/useProductActions';
 import { formatCurrency } from '@/utils/formatters';
-import {
-  ShoppingCart,
-  Star,
-  StarFilled,
-  ArrowLeft,
-  Check,
-  Close,
-} from '@element-plus/icons-vue';
+import { ShoppingCart, Star, StarFilled, ArrowLeft, Check, Close } from '@element-plus/icons-vue';
 
 const route = useRoute();
 const router = useRouter();
-const { getProductImageUrl, handleImageError, isFavorite, addToCart, toggleFavorite } = useProductActions();
+const { getProductImageUrl, handleImageError, isFavorite, addToCart, toggleFavorite } =
+  useProductActions();
 
 const product = ref<Product | null>(null);
 const isLoading = ref<boolean>(true);
@@ -92,7 +86,11 @@ onMounted(() => {
 
       <!-- если товар не найден -->
       <div v-else-if="!product" class="not-found">
-        <el-result icon="error" title="Товар не найден" sub-title="Возможно, он был удален или деактивирован.">
+        <el-result
+          icon="error"
+          title="Товар не найден"
+          sub-title="Возможно, он был удален или деактивирован."
+        >
           <template #extra>
             <el-button type="primary" @click="router.push('/catalog')">
               Перейти в каталог
@@ -202,10 +200,21 @@ onMounted(() => {
           <div class="specs-section">
             <h3 class="section-heading">Характеристики</h3>
             <ul class="specs-list">
-              <li><span class="spec-name">Идентификатор:</span> <span class="spec-val">{{ product.id }}</span></li>
-              <li><span class="spec-name">Артикул SKU:</span> <span class="spec-val">{{ product.sku }}</span></li>
-              <li><span class="spec-name">Статус активности:</span> <span class="spec-val">{{ product.isActive ? 'Активен' : 'Архивирован' }}</span></li>
-              <li><span class="spec-name">Гарантия:</span> <span class="spec-val">12 месяцев</span></li>
+              <li>
+                <span class="spec-name">Идентификатор:</span>
+                <span class="spec-val">{{ product.id }}</span>
+              </li>
+              <li>
+                <span class="spec-name">Артикул SKU:</span>
+                <span class="spec-val">{{ product.sku }}</span>
+              </li>
+              <li>
+                <span class="spec-name">Статус активности:</span>
+                <span class="spec-val">{{ product.isActive ? 'Активен' : 'Архивирован' }}</span>
+              </li>
+              <li>
+                <span class="spec-name">Гарантия:</span> <span class="spec-val">12 месяцев</span>
+              </li>
             </ul>
           </div>
         </div>

@@ -156,7 +156,10 @@ onMounted(() => {
           :controls="false"
           placeholder="От"
           class="price-input"
-          @update:model-value="(val: number | undefined | null) => updateField('minPrice', (val !== null && val !== undefined) ? val : undefined)"
+          @update:model-value="
+            (val: number | undefined | null) =>
+              updateField('minPrice', val !== null && val !== undefined ? val : undefined)
+          "
         />
         <span class="range-divider">—</span>
         <el-input-number
@@ -165,17 +168,16 @@ onMounted(() => {
           :controls="false"
           placeholder="До"
           class="price-input"
-          @update:model-value="(val: number | undefined | null) => updateField('maxPrice', (val !== null && val !== undefined) ? val : undefined)"
+          @update:model-value="
+            (val: number | undefined | null) =>
+              updateField('maxPrice', val !== null && val !== undefined ? val : undefined)
+          "
         />
       </div>
 
       <div class="actions">
-        <el-button type="primary" @click="emit('apply')">
-          Применить
-        </el-button>
-        <el-button :icon="RefreshLeft" @click="handleReset">
-          Сбросить
-        </el-button>
+        <el-button type="primary" @click="emit('apply')"> Применить </el-button>
+        <el-button :icon="RefreshLeft" @click="handleReset"> Сбросить </el-button>
       </div>
     </div>
   </div>

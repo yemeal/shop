@@ -28,7 +28,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // получение данных корзины авторизованного пользователя
       cart.value = await api.cart.get();
-    } catch (err: any) {
+    } catch {
       // если пользователь не авторизован — сбрасываем корзину
       cart.value = { items: [], total: 0, itemsCount: 0 };
     } finally {
@@ -43,8 +43,8 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // отправка запроса на добавление товара
       cart.value = await api.cart.addItem(productId, quantity);
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось добавить товар в корзину';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось добавить товар в корзину';
       throw err;
     } finally {
       isLoading.value = false;
@@ -61,8 +61,8 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // обновление количества
       cart.value = await api.cart.updateQuantity(productId, quantity);
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось изменить количество';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось изменить количество';
       throw err;
     } finally {
       isLoading.value = false;
@@ -76,8 +76,8 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // отправка запроса на удаление
       cart.value = await api.cart.removeItem(productId);
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось удалить товар из корзины';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось удалить товар из корзины';
       throw err;
     } finally {
       isLoading.value = false;
@@ -91,8 +91,8 @@ export const useCartStore = defineStore('cart', () => {
     try {
       // очистка на стороне сервера
       cart.value = await api.cart.clear();
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось очистить корзину';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось очистить корзину';
       throw err;
     } finally {
       isLoading.value = false;
@@ -109,8 +109,8 @@ export const useCartStore = defineStore('cart', () => {
       // после успешного заказа локально очищаем корзину
       cart.value = { items: [], total: 0, itemsCount: 0 };
       return order;
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось оформить заказ';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось оформить заказ';
       throw err;
     } finally {
       isLoading.value = false;

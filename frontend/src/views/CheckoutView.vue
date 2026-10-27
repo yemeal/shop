@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import MainLayout from '@/components/layout/MainLayout.vue';
@@ -128,7 +128,7 @@ async function handleCheckout() {
     return;
   }
 
-  let targetAddressId = '';
+  let targetAddressId: string;
 
   if (addressMode.value === 'saved') {
     if (!selectedAddressId.value) {
@@ -219,7 +219,7 @@ async function handleCheckout() {
                 </div>
                 <h2 class="card-title">Адрес доставки</h2>
               </div>
-              
+
               <!-- переключатель режима адреса -->
               <div v-if="addressStore.addresses.length > 0" class="mode-toggle">
                 <button
@@ -258,10 +258,14 @@ async function handleCheckout() {
                 <div class="option-details">
                   <div class="option-title-row">
                     <span class="option-main">г. {{ addr.city }}, ул. {{ addr.street }}</span>
-                    <span v-if="selectedAddressId === addr.id" class="badge-selected">Выбран для доставки</span>
+                    <span v-if="selectedAddressId === addr.id" class="badge-selected"
+                      >Выбран для доставки</span
+                    >
                   </div>
                   <p class="option-sub">
-                    дом {{ addr.house }}<span v-if="addr.apartment">, кв./оф. {{ addr.apartment }}</span> • {{ addr.country || 'Россия' }}
+                    дом {{ addr.house
+                    }}<span v-if="addr.apartment">, кв./оф. {{ addr.apartment }}</span> •
+                    {{ addr.country || 'Россия' }}
                   </p>
                 </div>
               </div>

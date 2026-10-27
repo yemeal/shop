@@ -76,12 +76,7 @@ function goToFullPage() {
     <div v-if="product" class="quick-view-body">
       <!-- колонка с изображением -->
       <div class="image-col">
-        <img
-          :src="imageSrc"
-          :alt="product.name"
-          class="modal-image"
-          @error="onImageError"
-        />
+        <img :src="imageSrc" :alt="product.name" class="modal-image" @error="onImageError" />
       </div>
 
       <!-- колонка с подробной информацией -->
@@ -94,12 +89,7 @@ function goToFullPage() {
             {{ product.isActive ? 'В наличии' : 'Нет в наличии' }}
           </el-tag>
           <div v-if="product.categories?.length" class="cats">
-            <el-tag
-              v-for="cat in product.categories"
-              :key="cat.id"
-              size="small"
-              type="info"
-            >
+            <el-tag v-for="cat in product.categories" :key="cat.id" size="small" type="info">
               {{ cat.name }}
             </el-tag>
           </div>

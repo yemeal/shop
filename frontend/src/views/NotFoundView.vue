@@ -15,9 +15,7 @@ const router = useRouter();
         sub-title="Запрашиваемая страница перемещена или никогда не существовала."
       >
         <template #extra>
-          <el-button type="primary" @click="router.push('/')">
-            Вернуться на главную
-          </el-button>
+          <el-button type="primary" @click="router.push('/')"> Вернуться на главную </el-button>
         </template>
       </el-result>
     </div>

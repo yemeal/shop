@@ -22,9 +22,7 @@ onMounted(async () => {
     <div class="favorites-page">
       <div class="page-header">
         <h1 class="page-title">Моё избранное</h1>
-        <p class="page-subtitle">
-          Товары, которые вы сохранили для будущих покупок
-        </p>
+        <p class="page-subtitle">Товары, которые вы сохранили для будущих покупок</p>
       </div>
 
       <!-- состояние пустого списка избранного -->

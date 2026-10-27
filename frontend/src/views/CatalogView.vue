@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import MainLayout from '@/components/layout/MainLayout.vue';
 import ProductCard from '@/components/product/ProductCard.vue';
@@ -56,7 +56,7 @@ async function fetchProducts() {
     });
     products.value = response.items || [];
     totalProducts.value = response.total || 0;
-  } catch (err) {
+  } catch {
     products.value = [];
     totalProducts.value = 0;
   } finally {
@@ -127,7 +127,7 @@ watch(
       currentPage.value = 1;
       fetchProducts();
     }
-  }
+  },
 );
 
 onMounted(() => {
@@ -141,9 +141,7 @@ onMounted(() => {
     <div class="catalog-page">
       <div class="page-header">
         <h1 class="page-title">Каталог товаров</h1>
-        <p class="page-subtitle">
-          Широкий ассортимент качественных товаров с удобной доставкой
-        </p>
+        <p class="page-subtitle">Широкий ассортимент качественных товаров с удобной доставкой</p>
       </div>
 
       <!-- панель фильтрации с корректным двусторонним v-model -->
@@ -161,9 +159,7 @@ onMounted(() => {
       <!-- если товаров не найдено -->
       <div v-else-if="products.length === 0" class="empty-state">
         <el-empty description="По заданным критериям товаров не найдено">
-          <el-button type="primary" @click="handleResetFilters">
-            Сбросить фильтры
-          </el-button>
+          <el-button type="primary" @click="handleResetFilters"> Сбросить фильтры </el-button>
         </el-empty>
       </div>
 
@@ -187,10 +183,7 @@ onMounted(() => {
       </div>
 
       <!-- модальное окно быстрого просмотра -->
-      <ProductQuickViewModal
-        v-model="isQuickViewOpen"
-        :product="quickViewProduct"
-      />
+      <ProductQuickViewModal v-model="isQuickViewOpen" :product="quickViewProduct" />
     </div>
   </MainLayout>
 </template>

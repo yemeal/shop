@@ -126,7 +126,9 @@ async function handleClearCart() {
                   :min="1"
                   :max="99"
                   size="default"
-                  @change="(val: number | undefined) => val && handleQuantityChange(row.productId, val)"
+                  @change="
+                    (val: number | undefined) => val && handleQuantityChange(row.productId, val)
+                  "
                 />
               </template>
             </el-table-column>
@@ -188,7 +190,9 @@ async function handleClearCart() {
                   :min="1"
                   :max="99"
                   size="small"
-                  @change="(val: number | undefined) => val && handleQuantityChange(row.productId, val)"
+                  @change="
+                    (val: number | undefined) => val && handleQuantityChange(row.productId, val)
+                  "
                 />
                 <span class="mobile-cart-price">{{ formatCurrency(row.lineTotal) }}</span>
               </div>

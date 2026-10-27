@@ -24,8 +24,8 @@ export const useAddressStore = defineStore('addresses', () => {
       const res = await api.addresses.list(userId);
       addresses.value = res.items || [];
       return addresses.value;
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось загрузить сохраненные адреса';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось загрузить сохраненные адреса';
       return [];
     } finally {
       isLoading.value = false;
@@ -35,7 +35,13 @@ export const useAddressStore = defineStore('addresses', () => {
   // добавление нового адреса пользователя
   async function addAddress(
     userId: string,
-    data: { country?: string; city: string; street: string; house: string; apartment?: string | null },
+    data: {
+      country?: string;
+      city: string;
+      street: string;
+      house: string;
+      apartment?: string | null;
+    },
   ): Promise<DeliveryAddress> {
     isLoading.value = true;
     error.value = null;
@@ -44,8 +50,8 @@ export const useAddressStore = defineStore('addresses', () => {
       const newAddress = await api.addresses.create(userId, data);
       addresses.value.unshift(newAddress);
       return newAddress;
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось сохранить адрес';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось сохранить адрес';
       throw err;
     } finally {
       isLoading.value = false;
@@ -60,8 +66,8 @@ export const useAddressStore = defineStore('addresses', () => {
       // удаление на сервере
       await api.addresses.delete(userId, addressId);
       addresses.value = addresses.value.filter((a) => a.id !== addressId);
-    } catch (err: any) {
-      error.value = err?.message || 'Не удалось удалить адрес';
+    } catch (err) {
+      error.value = (err as Error)?.message || 'Не удалось удалить адрес';
       throw err;
     } finally {
       isLoading.value = false;

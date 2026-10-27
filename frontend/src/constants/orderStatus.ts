@@ -6,7 +6,10 @@ export interface OrderStatusMeta {
   tagType: '' | 'success' | 'warning' | 'info' | 'danger';
 }
 
-export const ORDER_STATUS_MAP: Record<Order['status'], { label: string; tagType: '' | 'success' | 'warning' | 'info' | 'danger' }> = {
+export const ORDER_STATUS_MAP: Record<
+  Order['status'],
+  { label: string; tagType: '' | 'success' | 'warning' | 'info' | 'danger' }
+> = {
   pending: { label: 'Ожидает оплаты', tagType: 'warning' },
   paid: { label: 'Оплачен', tagType: 'success' },
   processing: { label: 'В обработке', tagType: 'info' },

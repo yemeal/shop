@@ -51,7 +51,7 @@ async function handleSubmit() {
     try {
       const user = await authStore.login(form.email, form.password);
       ElMessage.success(`Добро пожаловать, ${user.firstName || user.email}!`);
-      
+
       // подгружаем данные пользователя после авторизации
       await cartStore.fetchCart();
       await favoritesStore.fetchFavorites(user.id);
@@ -136,9 +136,7 @@ async function handleSubmit() {
         <template #footer>
           <div class="auth-card-footer">
             <span>Ещё нет аккаунта?</span>
-            <router-link to="/register" class="register-link">
-              Зарегистрироваться
-            </router-link>
+            <router-link to="/register" class="register-link"> Зарегистрироваться </router-link>
           </div>
         </template>
       </el-card>

@@ -121,20 +121,12 @@ async function handleSubmit() {
           <div class="name-fields">
             <!-- поле имя -->
             <el-form-item label="Имя" prop="firstName" class="half-width">
-              <el-input
-                v-model="form.firstName"
-                placeholder="Иван"
-                :prefix-icon="User"
-              />
+              <el-input v-model="form.firstName" placeholder="Иван" :prefix-icon="User" />
             </el-form-item>
 
             <!-- поле фамилия -->
             <el-form-item label="Фамилия" prop="lastName" class="half-width">
-              <el-input
-                v-model="form.lastName"
-                placeholder="Иванов"
-                :prefix-icon="User"
-              />
+              <el-input v-model="form.lastName" placeholder="Иванов" :prefix-icon="User" />
             </el-form-item>
           </div>
 
@@ -187,9 +179,7 @@ async function handleSubmit() {
         <template #footer>
           <div class="auth-card-footer">
             <span>Уже есть аккаунт?</span>
-            <router-link to="/login" class="login-link">
-              Войти
-            </router-link>
+            <router-link to="/login" class="login-link"> Войти </router-link>
           </div>
         </template>
       </el-card>

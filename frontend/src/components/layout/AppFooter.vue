@@ -17,7 +17,8 @@ const currentYear = new Date().getFullYear();
             <span class="brand-title">ТехноШоп</span>
           </div>
           <p class="brand-desc">
-            Современный интернет-магазин электроники, гаджетов и умных устройств. Мы предлагаем только оригинальную продукцию с гарантией качества и быстрой доставкой по всей стране.
+            Современный интернет-магазин электроники, гаджетов и умных устройств. Мы предлагаем
+            только оригинальную продукцию с гарантией качества и быстрой доставкой по всей стране.
           </p>
           <div class="contacts-list">
             <div class="contact-item">
@@ -63,7 +64,8 @@ const currentYear = new Date().getFullYear();
         <div class="footer-col">
           <h4 class="col-title">Служба заботы</h4>
           <p class="service-text">
-            Круглосуточный приём заказов на сайте. Операторы службы поддержки на связи ежедневно с 9:00 до 22:00.
+            Круглосуточный приём заказов на сайте. Операторы службы поддержки на связи ежедневно с
+            9:00 до 22:00.
           </p>
           <div class="payment-methods">
             <span class="payment-badge">МИР</span>
@@ -79,7 +81,8 @@ const currentYear = new Date().getFullYear();
     <div class="footer-bottom">
       <div class="footer-container bottom-container">
         <p class="copyright-text">
-          © {{ currentYear }} ТехноШоп. Все права защищены. Цены и наличие товаров актуальны на текущий момент.
+          © {{ currentYear }} ТехноШоп. Все права защищены. Цены и наличие товаров актуальны на
+          текущий момент.
         </p>
         <div class="secure-badge">
           <el-icon><Service /></el-icon>

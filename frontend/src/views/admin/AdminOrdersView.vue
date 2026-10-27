@@ -3,13 +3,10 @@ import { ref, onMounted } from 'vue';
 import MainLayout from '@/components/layout/MainLayout.vue';
 import OrderDetailsModal from '@/components/common/OrderDetailsModal.vue';
 import { api, type Order } from '@/api';
-import { useAuthStore } from '@/stores/auth';
 import { ORDER_STATUS_OPTIONS } from '@/constants/orderStatus';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { ElMessage } from 'element-plus';
 import { Refresh } from '@element-plus/icons-vue';
-
-const authStore = useAuthStore();
 
 // список заказов и пагинация
 const orders = ref<Order[]>([]);
@@ -53,7 +50,7 @@ async function handleStatusChange(orderId: string, newStatus: Order['status']) {
   try {
     const updated = await api.orders.updateStatus(orderId, newStatus);
     ElMessage.success(`Статус заказа #${orderId.slice(0, 8)} изменен`);
-    
+
     // локальное обновление в таблице
     const found = orders.value.find((o) => o.id === orderId);
     if (found) {
@@ -86,7 +83,9 @@ onMounted(() => {
       <div class="page-header">
         <div>
           <h1 class="page-title">Управление заказами</h1>
-          <p class="page-subtitle">Просмотр заказов клиентов и оперативное изменение статусов доставки</p>
+          <p class="page-subtitle">
+            Просмотр заказов клиентов и оперативное изменение статусов доставки
+          </p>
         </div>
         <div class="header-actions">
           <el-select
@@ -119,7 +118,11 @@ onMounted(() => {
             <template #default="{ row }">
               <div v-if="row.user" class="customer-info">
                 <span class="customer-name" :title="row.user.email">
-                  {{ row.user.firstName ? `${row.user.firstName} ${row.user.lastName || ''}`.trim() : row.user.email }}
+                  {{
+                    row.user.firstName
+                      ? `${row.user.firstName} ${row.user.lastName || ''}`.trim()
+                      : row.user.email
+                  }}
                 </span>
                 <span class="customer-email">{{ row.user.email }}</span>
               </div>
@@ -134,9 +137,7 @@ onMounted(() => {
           </el-table-column>
 
           <el-table-column label="Товаров" width="110" align="center">
-            <template #default="{ row }">
-              {{ row.itemsCount || '—' }} шт.
-            </template>
+            <template #default="{ row }"> {{ row.itemsCount || '—' }} шт. </template>
           </el-table-column>
 
           <el-table-column label="Сумма" width="140" align="right">
@@ -189,10 +190,7 @@ onMounted(() => {
       </div>
 
       <!-- модальное окно подробного просмотра заказа (единый компонент) -->
-      <OrderDetailsModal
-        v-model="isOrderDetailsOpen"
-        :order="selectedOrder"
-      />
+      <OrderDetailsModal v-model="isOrderDetailsOpen" :order="selectedOrder" />
     </div>
   </MainLayout>
 </template>

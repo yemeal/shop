@@ -119,20 +119,19 @@ onMounted(() => {
               <strong>{{ row.name }}</strong>
             </template>
           </el-table-column>
-          <el-table-column prop="productCount" label="Количество товаров" width="180" align="center">
+          <el-table-column
+            prop="productCount"
+            label="Количество товаров"
+            width="180"
+            align="center"
+          >
             <template #default="{ row }">
               <el-tag type="info">{{ row.productCount }} шт.</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="Действия" width="120" align="center">
             <template #default="{ row }">
-              <el-button
-                type="danger"
-                link
-                size="small"
-                :icon="Delete"
-                @click="handleDelete(row)"
-              >
+              <el-button type="danger" link size="small" :icon="Delete" @click="handleDelete(row)">
                 Удалить
               </el-button>
             </template>
@@ -149,9 +148,7 @@ onMounted(() => {
         </el-form>
         <template #footer>
           <el-button @click="isDialogOpen = false">Отмена</el-button>
-          <el-button type="primary" :loading="isSaving" @click="handleSave">
-            Создать
-          </el-button>
+          <el-button type="primary" :loading="isSaving" @click="handleSave"> Создать </el-button>
         </template>
       </el-dialog>
     </div>

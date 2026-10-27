@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import MainLayout from '@/components/layout/MainLayout.vue';
 import ProductCard from '@/components/product/ProductCard.vue';
@@ -12,14 +12,7 @@ import { useAddressStore } from '@/stores/addresses';
 import { getOrderStatusInfo } from '@/constants/orderStatus';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import {
-  User,
-  ShoppingBag,
-  Star,
-  Location,
-  Plus,
-  Delete,
-} from '@element-plus/icons-vue';
+import { User, ShoppingBag, Star, Location, Plus, Delete } from '@element-plus/icons-vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -231,12 +224,7 @@ onMounted(async () => {
 
               <el-table-column label="Действия" width="130" align="center">
                 <template #default="{ row }">
-                  <el-button
-                    type="primary"
-                    link
-                    size="small"
-                    @click="viewOrderDetails(row.id)"
-                  >
+                  <el-button type="primary" link size="small" @click="viewOrderDetails(row.id)">
                     Подробнее
                   </el-button>
                 </template>
@@ -280,7 +268,9 @@ onMounted(async () => {
 
           <div class="addresses-tab-content">
             <div class="tab-action-bar">
-              <p class="tab-desc">Управляйте сохраненными адресами для быстрого оформления покупок</p>
+              <p class="tab-desc">
+                Управляйте сохраненными адресами для быстрого оформления покупок
+              </p>
               <el-button type="primary" :icon="Plus" @click="openAddAddressDialog">
                 Добавить новый адрес
               </el-button>
@@ -316,9 +306,7 @@ onMounted(async () => {
                   />
                 </div>
                 <div class="addr-body">
-                  <p class="addr-main">
-                    г. {{ addr.city }}, ул. {{ addr.street }}
-                  </p>
+                  <p class="addr-main">г. {{ addr.city }}, ул. {{ addr.street }}</p>
                   <p class="addr-sub">
                     дом {{ addr.house }}
                     <span v-if="addr.apartment">, кв./офис {{ addr.apartment }}</span>
@@ -332,10 +320,7 @@ onMounted(async () => {
       </el-tabs>
 
       <!-- модальное окно подробной информации о заказе (переиспользуемый компонент) -->
-      <OrderDetailsModal
-        v-model="isOrderDetailsOpen"
-        :order="selectedOrder"
-      />
+      <OrderDetailsModal v-model="isOrderDetailsOpen" :order="selectedOrder" />
 
       <!-- модальное окно добавления нового адреса доставки -->
       <el-dialog
@@ -349,11 +334,7 @@ onMounted(async () => {
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="isAddressDialogOpen = false">Отмена</el-button>
-            <el-button
-              type="primary"
-              :loading="isSavingAddress"
-              @click="handleSaveAddress"
-            >
+            <el-button type="primary" :loading="isSavingAddress" @click="handleSaveAddress">
               Сохранить адрес
             </el-button>
           </div>

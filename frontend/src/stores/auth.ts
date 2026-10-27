@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api, type User } from '@/api';
+import { useCartStore } from './cart';
+import { useFavoritesStore } from './favorites';
+import { useAddressStore } from './addresses';
 
 // хранилище состояния аутентификации пользователя
 export const useAuthStore = defineStore('auth', () => {
@@ -46,8 +49,8 @@ export const useAuthStore = defineStore('auth', () => {
       const result = await api.auth.login({ email, password });
       user.value = result.user;
       return result.user;
-    } catch (err: any) {
-      errorMessage.value = err?.message || 'Ошибка входа в систему';
+    } catch (err) {
+      errorMessage.value = (err as Error)?.message || 'Ошибка входа в систему';
       throw err;
     } finally {
       isLoading.value = false;
@@ -68,8 +71,8 @@ export const useAuthStore = defineStore('auth', () => {
       const result = await api.auth.register(payload);
       user.value = result.user;
       return result.user;
-    } catch (err: any) {
-      errorMessage.value = err?.message || 'Ошибка при регистрации';
+    } catch (err) {
+      errorMessage.value = (err as Error)?.message || 'Ошибка при регистрации';
       throw err;
     } finally {
       isLoading.value = false;
@@ -87,6 +90,9 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       user.value = null;
       isLoading.value = false;
+      useCartStore().clearLocal();
+      useFavoritesStore().clear();
+      useAddressStore().clear();
     }
   }
 

@@ -42,7 +42,6 @@ const rules: FormRules = {
   ],
 };
 
-
 // загрузка списка товаров и категорий
 async function loadData() {
   isLoading.value = true;
@@ -182,12 +181,7 @@ onMounted(() => {
 
       <!-- таблица товаров -->
       <div class="table-card">
-        <el-table
-          v-loading="isLoading"
-          :data="products"
-          style="width: 100%"
-          stripe
-        >
+        <el-table v-loading="isLoading" :data="products" style="width: 100%" stripe>
           <!-- изображение -->
           <el-table-column label="Фото" width="80" align="center">
             <template #default="{ row }">
@@ -209,12 +203,7 @@ onMounted(() => {
           <!-- категории -->
           <el-table-column label="Категории" min-width="160">
             <template #default="{ row }">
-              <el-tag
-                v-for="cat in row.categories"
-                :key="cat.id"
-                size="small"
-                class="mr-1"
-              >
+              <el-tag v-for="cat in row.categories" :key="cat.id" size="small" class="mr-1">
                 {{ cat.name }}
               </el-tag>
             </template>
@@ -239,22 +228,10 @@ onMounted(() => {
           <!-- действия -->
           <el-table-column label="Действия" width="160" align="center">
             <template #default="{ row }">
-              <el-button
-                size="small"
-                type="primary"
-                link
-                :icon="Edit"
-                @click="openEditDialog(row)"
-              >
+              <el-button size="small" type="primary" link :icon="Edit" @click="openEditDialog(row)">
                 Изменить
               </el-button>
-              <el-button
-                size="small"
-                type="danger"
-                link
-                :icon="Delete"
-                @click="handleDelete(row)"
-              >
+              <el-button size="small" type="danger" link :icon="Delete" @click="handleDelete(row)">
                 Удалить
               </el-button>
             </template>
@@ -269,12 +246,7 @@ onMounted(() => {
         width="600px"
         align-center
       >
-        <el-form
-          ref="formRef"
-          :model="productForm"
-          :rules="rules"
-          label-position="top"
-        >
+        <el-form ref="formRef" :model="productForm" :rules="rules" label-position="top">
           <div class="form-row">
             <el-form-item label="Артикул (SKU)" prop="sku" class="col-6">
               <el-input v-model="productForm.sku" placeholder="PROD-001" />
@@ -336,9 +308,7 @@ onMounted(() => {
 
         <template #footer>
           <el-button @click="isDialogOpen = false">Отмена</el-button>
-          <el-button type="primary" :loading="isSaving" @click="handleSave">
-            Сохранить
-          </el-button>
+          <el-button type="primary" :loading="isSaving" @click="handleSave"> Сохранить </el-button>
         </template>
       </el-dialog>
     </div>

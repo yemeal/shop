@@ -36,7 +36,8 @@ describe('ProductFilterPanel.vue', () => {
         stubs: {
           'el-input': {
             props: ['modelValue'],
-            template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            template:
+              '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           'el-select': { template: '<div><slot /></div>' },
           'el-option': { template: '<option><slot /></option>' },
@@ -101,7 +102,9 @@ describe('ProductFilterPanel.vue', () => {
       },
     });
 
-    (wrapper.vm as any).handleSortChange('created_at:desc');
+    (wrapper.vm as unknown as { handleSortChange: (val: string) => void }).handleSortChange(
+      'created_at:desc',
+    );
 
     expect(wrapper.emitted('update:filters')).toBeTruthy();
     const emitted = wrapper.emitted('update:filters')![0][0] as FilterState;

@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useCartStore } from '@/stores/cart';
 import { useFavoritesStore } from '@/stores/favorites';
-import { useAddressStore } from '@/stores/addresses';
 import { ElMessage } from 'element-plus';
 import {
   ShoppingCart,
@@ -23,7 +22,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 const favoritesStore = useFavoritesStore();
-const addressStore = useAddressStore();
 
 // отображаемое имя пользователя
 const displayName = computed(() => {
@@ -38,9 +36,6 @@ const displayName = computed(() => {
 async function handleLogout() {
   try {
     await authStore.logout();
-    favoritesStore.clear();
-    cartStore.clearLocal();
-    addressStore.clear();
     ElMessage.success('Вы успешно вышли из системы');
     router.push({ name: 'home' });
   } catch {
@@ -109,7 +104,7 @@ async function handleLogout() {
                   <el-icon><Star /></el-icon>
                   Моё избранное
                 </el-dropdown-item>
-                
+
                 <!-- секция администратора -->
                 <template v-if="authStore.isAdmin">
                   <el-dropdown-item divided disabled>

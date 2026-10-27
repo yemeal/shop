@@ -36,12 +36,12 @@ const emit = defineEmits<{
       </div>
 
       <div v-if="order.deliveryAddress" class="modal-address-box">
-        <h4><el-icon><Location /></el-icon> Адрес доставки</h4>
+        <h4>
+          <el-icon><Location /></el-icon> Адрес доставки
+        </h4>
         <p>
-          {{ order.deliveryAddress.country || 'Россия' }},
-          г. {{ order.deliveryAddress.city }},
-          ул. {{ order.deliveryAddress.street }},
-          д. {{ order.deliveryAddress.house }}
+          {{ order.deliveryAddress.country || 'Россия' }}, г. {{ order.deliveryAddress.city }}, ул.
+          {{ order.deliveryAddress.street }}, д. {{ order.deliveryAddress.house }}
           <span v-if="order.deliveryAddress.apartment">
             , кв. {{ order.deliveryAddress.apartment }}
           </span>

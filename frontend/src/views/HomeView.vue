@@ -5,13 +5,7 @@ import MainLayout from '@/components/layout/MainLayout.vue';
 import ProductCard from '@/components/product/ProductCard.vue';
 import ProductQuickViewModal from '@/components/product/ProductQuickViewModal.vue';
 import { api, type Product, type Category } from '@/api';
-import {
-  Goods,
-  Van,
-  CircleCheck,
-  Service,
-  ArrowRight,
-} from '@element-plus/icons-vue';
+import { Goods, Van, CircleCheck, Service, ArrowRight } from '@element-plus/icons-vue';
 
 const router = useRouter();
 
@@ -165,10 +159,7 @@ onMounted(() => {
       </section>
 
       <!-- модальное окно быстрого просмотра -->
-      <ProductQuickViewModal
-        v-model="isQuickViewOpen"
-        :product="quickViewProduct"
-      />
+      <ProductQuickViewModal v-model="isQuickViewOpen" :product="quickViewProduct" />
     </div>
   </MainLayout>
 </template>
