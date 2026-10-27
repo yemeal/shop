@@ -19,7 +19,8 @@ COPY package.json package-lock.json ./
 
 # установка только продакшен-зависимостей с кэшем npm
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --no-audit --no-fund
+    npm ci --omit=dev --no-audit --no-fund && \
+    npm rebuild sqlite3 --build-from-source
 
 # стадия для тестов в ci
 FROM dependencies AS test
