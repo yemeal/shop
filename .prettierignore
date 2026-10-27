@@ -1,0 +1,10 @@
+node_modules
+dist
+keys
+*.pem
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+package-lock.json
+.git
