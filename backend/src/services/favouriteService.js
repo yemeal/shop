@@ -5,13 +5,15 @@ const { ensureUser, mapProduct } = require('./shared');
  * создание сервиса избранного
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/IFavouriteRepository').IFavouriteRepository} deps.favouriteRepository
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} deps.userRepository
- * @param {import('../repositories/interfaces/IProductRepository').IProductRepository} deps.productRepository
+ * @param {Object} deps.favouriteRepository
+ * @param {Object} deps.userRepository
+ * @param {Object} deps.productRepository
  */
 function createFavouriteService({ favouriteRepository, userRepository, productRepository }) {
   if (!favouriteRepository || !userRepository || !productRepository) {
-    throw new Error('FavouriteService требует favouriteRepository, userRepository и productRepository');
+    throw new Error(
+      'FavouriteService требует favouriteRepository, userRepository и productRepository',
+    );
   }
 
   async function listFavourites(userId) {

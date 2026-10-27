@@ -1,16 +1,9 @@
-const { ISessionRepository } = require('../interfaces/ISessionRepository');
-
-class SqliteSessionRepository extends ISessionRepository {
+class SqliteSessionRepository {
   /**
    * @param {import('sqlite').Database} db
    */
   constructor(db) {
-    super();
     this.db = db;
-  }
-
-  _getExecutor(trx = null) {
-    return trx || this.db;
   }
 
   // атомарное создание сессии и начального refresh-токена
@@ -23,10 +16,8 @@ class SqliteSessionRepository extends ISessionRepository {
     tokenId,
     tokenHash,
     tokenExpiresAt,
-  }, trx = null) {
-    const executor = this._getExecutor(trx);
-
-    await executor.run(
+  }) {
+    await this.db.run(
       `INSERT INTO auth_sessions (id, user_id, device_info, ip_address, idle_expires_at)
        VALUES (?, ?, ?, ?, ?)`,
       sessionId,
@@ -36,7 +27,7 @@ class SqliteSessionRepository extends ISessionRepository {
       idleExpiresAt,
     );
 
-    await executor.run(
+    await this.db.run(
       `INSERT INTO refresh_tokens (id, session_id, token_hash, expires_at)
        VALUES (?, ?, ?, ?)`,
       tokenId,
@@ -55,9 +46,8 @@ class SqliteSessionRepository extends ISessionRepository {
     };
   }
 
-  async findRefreshTokenWithSession(tokenHash, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get(
+  async findRefreshTokenWithSession(tokenHash) {
+    const row = await this.db.get(
       `SELECT rt.id AS token_id, rt.session_id, rt.token_hash, rt.used_at, rt.expires_at AS token_expires_at, rt.created_at AS token_created_at,
               s.id AS session_id, s.user_id, s.device_info, s.ip_address, s.revoked_at, s.idle_expires_at,
               u.id AS user_id, u.email, u.first_name, u.last_name, u.role
@@ -106,11 +96,9 @@ class SqliteSessionRepository extends ISessionRepository {
     newTokenHash,
     newExpiresAt,
     newIdleExpiresAt,
-  }, trx = null) {
-    const executor = this._getExecutor(trx);
-
+  }) {
     // атомарное списание токена только если он еще не использован
-    const updateResult = await executor.run(
+    const updateResult = await this.db.run(
       `UPDATE refresh_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = ? AND used_at IS NULL`,
       currentTokenId,
     );
@@ -122,7 +110,7 @@ class SqliteSessionRepository extends ISessionRepository {
     }
 
     // сохранение нового токена в цепочку сессии
-    await executor.run(
+    await this.db.run(
       `INSERT INTO refresh_tokens (id, session_id, token_hash, expires_at)
        VALUES (?, ?, ?, ?)`,
       newTokenId,
@@ -132,7 +120,7 @@ class SqliteSessionRepository extends ISessionRepository {
     );
 
     // продление срока действия сессии
-    await executor.run(
+    await this.db.run(
       `UPDATE auth_sessions
        SET idle_expires_at = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
@@ -141,9 +129,8 @@ class SqliteSessionRepository extends ISessionRepository {
     );
   }
 
-  async revokeSession(sessionId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const result = await executor.run(
+  async revokeSession(sessionId) {
+    const result = await this.db.run(
       `UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP
        WHERE id = ? AND revoked_at IS NULL`,
       sessionId,
@@ -151,18 +138,16 @@ class SqliteSessionRepository extends ISessionRepository {
     return result.changes > 0;
   }
 
-  async revokeAllUserSessions(userId, trx = null) {
-    const executor = this._getExecutor(trx);
-    await executor.run(
+  async revokeAllUserSessions(userId) {
+    await this.db.run(
       `UPDATE auth_sessions SET revoked_at = CURRENT_TIMESTAMP
        WHERE user_id = ? AND revoked_at IS NULL`,
       userId,
     );
   }
 
-  async listUserSessions(userId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const rows = await executor.all(
+  async listUserSessions(userId) {
+    const rows = await this.db.all(
       `SELECT id, user_id, device_info, ip_address, revoked_at, idle_expires_at, created_at, updated_at
        FROM auth_sessions
        WHERE user_id = ?
@@ -173,9 +158,8 @@ class SqliteSessionRepository extends ISessionRepository {
   }
 
   // поддержка устаревших сессий
-  async createSession({ id, userId, tokenHash, expiresAt }, trx = null) {
-    const executor = this._getExecutor(trx);
-    await executor.run(
+  async createSession({ id, userId, tokenHash, expiresAt }) {
+    await this.db.run(
       `INSERT INTO user_sessions (id, user_id, token_hash, expires_at)
        VALUES (?, ?, ?, ?)`,
       id,
@@ -186,9 +170,9 @@ class SqliteSessionRepository extends ISessionRepository {
     return { id, userId, tokenHash, expiresAt };
   }
 
-  async findValidSession(tokenHash, trx = null) {
+  async findValidSession(tokenHash) {
     // поиск в сессиях устройств
-    const rt = await this.findRefreshTokenWithSession(tokenHash, trx);
+    const rt = await this.findRefreshTokenWithSession(tokenHash);
     if (rt && rt.session.isActive && !rt.token.isUsed) {
       return {
         sessionId: rt.session.id,
@@ -201,9 +185,8 @@ class SqliteSessionRepository extends ISessionRepository {
       };
     }
 
-    const executor = this._getExecutor(trx);
     // поиск в устаревшей таблице сессий
-    const row = await executor.get(
+    const row = await this.db.get(
       `SELECT s.id AS session_id, s.user_id, s.expires_at, s.revoked_at,
               u.id, u.email, u.first_name, u.last_name, u.role, u.created_at
        FROM user_sessions s

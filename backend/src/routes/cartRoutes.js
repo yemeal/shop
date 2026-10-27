@@ -20,14 +20,15 @@ function getUserId(req) {
     throw new ForbiddenError('Доступ запрещен: нельзя обращаться к корзине другого пользователя');
   }
 
-  return (req.user.role === 'admin' && specifiedUserId) ? specifiedUserId : req.user.id;
+  return req.user.role === 'admin' && specifiedUserId ? specifiedUserId : req.user.id;
 }
 
-function createCartRouter(cartService, authService = null) {
+function createCartRouter(cartService, authService) {
+  if (!cartService || !authService) {
+    throw new Error('createCartRouter требует cartService и authService');
+  }
   const router = express.Router();
-
-  const authMiddleware = authService ? requireAuth(authService) : (_req, _res, next) => next();
-  router.use(authMiddleware);
+  router.use(requireAuth(authService));
 
   router.get(
     '/',
@@ -43,11 +44,7 @@ function createCartRouter(cartService, authService = null) {
     validateRequest({ body: addCartItemBodySchema }),
     asyncHandler(async (request, response) => {
       const userId = getUserId(request);
-      const cart = await cartService.addItem(
-        userId,
-        request.body.productId,
-        request.body.quantity,
-      );
+      const cart = await cartService.addItem(userId, request.body.productId, request.body.quantity);
       response.status(201).json(cart);
     }),
   );

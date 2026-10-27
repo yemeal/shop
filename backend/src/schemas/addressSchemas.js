@@ -54,7 +54,7 @@ const createAddressBodySchema = z.object({
     .max(50, { message: 'Номер квартиры не должен превышать 50 символов' })
     .nullable()
     .optional()
-    .transform((val) => (val === '' ? null : val ?? null)),
+    .transform((val) => (val === '' ? null : (val ?? null))),
 });
 
 module.exports = {

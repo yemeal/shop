@@ -6,10 +6,14 @@ const { mapCategory, mapProduct } = require('./shared');
  * создание сервиса каталога
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/IProductRepository').IProductRepository} deps.productRepository
- * @param {import('../repositories/interfaces/ICategoryRepository').ICategoryRepository} deps.categoryRepository
+ * @param {Object} deps.productRepository
+ * @param {Object} deps.categoryRepository
  */
-function createCatalogService({ productRepository, categoryRepository, transactionManager = null }) {
+function createCatalogService({
+  productRepository,
+  categoryRepository,
+  transactionManager = null,
+}) {
   if (!productRepository || !categoryRepository) {
     throw new Error('CatalogService требует productRepository и categoryRepository');
   }
@@ -85,7 +89,7 @@ function createCatalogService({ productRepository, categoryRepository, transacti
   async function createProduct(input) {
     const id = randomUUID();
     let product;
-    await runInTx(async (trx) => {
+    await runInTx(async () => {
       product = await productRepository.createProduct(
         {
           id,
@@ -97,7 +101,6 @@ function createCatalogService({ productRepository, categoryRepository, transacti
           imageUrl: input.imageUrl ?? null,
         },
         input.categoryIds || [],
-        trx,
       );
     });
 
@@ -115,8 +118,8 @@ function createCatalogService({ productRepository, categoryRepository, transacti
     }
 
     let updated;
-    await runInTx(async (trx) => {
-      updated = await productRepository.updateProduct(id, input, input.categoryIds, trx);
+    await runInTx(async () => {
+      updated = await productRepository.updateProduct(id, input, input.categoryIds);
     });
 
     const categories = await productRepository.getCategoriesForProduct(id);
@@ -134,8 +137,13 @@ function createCatalogService({ productRepository, categoryRepository, transacti
     try {
       await productRepository.deleteProduct(id);
     } catch (err) {
-      if (err.code === 'SQLITE_CONSTRAINT' || (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))) {
-        throw new ConflictError('Нельзя удалить товар, по которому уже оформлены заказы. Чтобы скрыть его из каталога, выключите статус «В наличии» (деактивируйте его).');
+      if (
+        err.code === 'SQLITE_CONSTRAINT' ||
+        (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))
+      ) {
+        throw new ConflictError(
+          'Нельзя удалить товар, по которому уже оформлены заказы. Чтобы скрыть его из каталога, выключите статус «В наличии» (деактивируйте его).',
+        );
       }
       throw err;
     }
@@ -159,8 +167,13 @@ function createCatalogService({ productRepository, categoryRepository, transacti
     try {
       await categoryRepository.deleteCategory(id);
     } catch (err) {
-      if (err.code === 'SQLITE_CONSTRAINT' || (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))) {
-        throw new ConflictError('Нельзя удалить категорию, к которой привязаны товары или подкатегории.');
+      if (
+        err.code === 'SQLITE_CONSTRAINT' ||
+        (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))
+      ) {
+        throw new ConflictError(
+          'Нельзя удалить категорию, к которой привязаны товары или подкатегории.',
+        );
       }
       throw err;
     }

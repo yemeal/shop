@@ -92,7 +92,7 @@ function mapUser(row) {
 
 /**
  * проверка существования пользователя
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} userRepository
+ * @param {Object} userRepository
  * @param {string} userId
  */
 async function ensureUser(userRepository, userId) {

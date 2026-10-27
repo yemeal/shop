@@ -269,7 +269,9 @@ async function migrateSchemaAdditions(db) {
   }
 
   // заполнение search_text для неиндексированных товаров
-  const unindexedProducts = await db.all('SELECT id, name, sku, description FROM products WHERE search_text IS NULL');
+  const unindexedProducts = await db.all(
+    'SELECT id, name, sku, description FROM products WHERE search_text IS NULL',
+  );
   for (const prod of unindexedProducts) {
     const st = `${prod.name || ''} ${prod.sku || ''} ${prod.description || ''}`.toLowerCase();
     await db.run('UPDATE products SET search_text = ? WHERE id = ?', st, prod.id);

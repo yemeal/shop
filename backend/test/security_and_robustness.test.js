@@ -71,16 +71,28 @@ test('Security & IDOR Protections: Users cannot access or tamper with other user
     }),
   });
   assert.equal(regBob.status, 201);
-  const bobCookies = getCookieHeader(regBob);
   const bob = await regBob.json();
   assert.deepEqual(Object.keys(bob), ['user'], 'Registration must return ONLY user');
 
   // проверка хеширования пароля через scrypt
-  const userARow = await server.db.get('SELECT password_hash FROM users WHERE id = ?', alice.user.id);
+  const userARow = await server.db.get(
+    'SELECT password_hash FROM users WHERE id = ?',
+    alice.user.id,
+  );
   assert.ok(
     userARow.password_hash.startsWith('scrypt:'),
     'Passwords must be hashed using scrypt with unique salt',
   );
+
+  // проверка доступа к эндпоинтам /api/me/...
+  const aliceMeOrders = await request('/api/me/orders', { headers: aliceCookies });
+  assert.equal(aliceMeOrders.status, 200);
+
+  const aliceMeFavourites = await request('/api/me/favourites', { headers: aliceCookies });
+  assert.equal(aliceMeFavourites.status, 200);
+
+  const aliceMeAddresses = await request('/api/me/addresses', { headers: aliceCookies });
+  assert.equal(aliceMeAddresses.status, 200);
 
   // попытка просмотра чужих заказов
   const aliceViewsBobOrders = await request(`/api/users/${bob.user.id}/orders`, {

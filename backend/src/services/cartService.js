@@ -5,12 +5,18 @@ const { ensureUser, mapCartItem } = require('./shared');
  * создание сервиса корзины
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/ICartRepository').ICartRepository} deps.cartRepository
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} deps.userRepository
- * @param {import('../repositories/interfaces/IProductRepository').IProductRepository} deps.productRepository
+ * @param {Object} deps.cartRepository
+ * @param {Object} deps.userRepository
+ * @param {Object} deps.productRepository
  * @param {Object} [deps.orderService]
  */
-function createCartService({ cartRepository, userRepository, productRepository, orderService, transactionManager = null }) {
+function createCartService({
+  cartRepository,
+  userRepository,
+  productRepository,
+  orderService,
+  transactionManager = null,
+}) {
   if (!cartRepository || !userRepository || !productRepository) {
     throw new Error('CartService требует cartRepository, userRepository и productRepository');
   }
@@ -80,7 +86,7 @@ function createCartService({ cartRepository, userRepository, productRepository, 
     }
 
     let order;
-    await runInTx(async (trx) => {
+    await runInTx(async () => {
       order = await orderService.createOrder({
         userId,
         deliveryAddressId,
@@ -90,7 +96,7 @@ function createCartService({ cartRepository, userRepository, productRepository, 
         })),
       });
 
-      await cartRepository.clearCart(userId, trx);
+      await cartRepository.clearCart(userId);
     });
 
     return order;

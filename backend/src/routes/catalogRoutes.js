@@ -13,8 +13,13 @@ const {
 } = require('../schemas/catalogSchemas');
 const { paginationQuerySchema } = require('../schemas/commonSchemas');
 
-function createCatalogRouter(catalogService, authService = null) {
+function createCatalogRouter(catalogService, authService) {
+  if (!catalogService || !authService) {
+    throw new Error('createCatalogRouter требует catalogService и authService');
+  }
+
   const router = express.Router();
+  const adminAuth = [requireAuth(authService), requireRole('admin')];
 
   // публичные маршруты каталога
   router.get(
@@ -60,65 +65,58 @@ function createCatalogRouter(catalogService, authService = null) {
   );
 
   // маршруты администрирования каталога
-  if (authService) {
-    const adminAuth = [requireAuth(authService), requireRole('admin')];
+  router.post(
+    '/products',
+    ...adminAuth,
+    validateRequest({ body: createProductBodySchema }),
+    asyncHandler(async (request, response) => {
+      const product = await catalogService.createProduct(request.body);
+      response.status(201).json(product);
+    }),
+  );
 
-    router.post(
-      '/products',
-      ...adminAuth,
-      validateRequest({ body: createProductBodySchema }),
-      asyncHandler(async (request, response) => {
-        const product = await catalogService.createProduct(request.body);
-        response.status(201).json(product);
-      }),
-    );
+  router.patch(
+    '/products/:productId',
+    ...adminAuth,
+    validateRequest({
+      params: productIdParamSchema,
+      body: updateProductBodySchema,
+    }),
+    asyncHandler(async (request, response) => {
+      const product = await catalogService.updateProduct(request.params.productId, request.body);
+      response.json(product);
+    }),
+  );
 
-    router.patch(
-      '/products/:productId',
-      ...adminAuth,
-      validateRequest({
-        params: productIdParamSchema,
-        body: updateProductBodySchema,
-      }),
-      asyncHandler(async (request, response) => {
-        const product = await catalogService.updateProduct(
-          request.params.productId,
-          request.body,
-        );
-        response.json(product);
-      }),
-    );
+  router.delete(
+    '/products/:productId',
+    ...adminAuth,
+    validateRequest({ params: productIdParamSchema }),
+    asyncHandler(async (request, response) => {
+      await catalogService.deleteProduct(request.params.productId);
+      response.status(204).send();
+    }),
+  );
 
-    router.delete(
-      '/products/:productId',
-      ...adminAuth,
-      validateRequest({ params: productIdParamSchema }),
-      asyncHandler(async (request, response) => {
-        await catalogService.deleteProduct(request.params.productId);
-        response.status(204).send();
-      }),
-    );
+  router.post(
+    '/categories',
+    ...adminAuth,
+    validateRequest({ body: createCategoryBodySchema }),
+    asyncHandler(async (request, response) => {
+      const category = await catalogService.createCategory(request.body);
+      response.status(201).json(category);
+    }),
+  );
 
-    router.post(
-      '/categories',
-      ...adminAuth,
-      validateRequest({ body: createCategoryBodySchema }),
-      asyncHandler(async (request, response) => {
-        const category = await catalogService.createCategory(request.body);
-        response.status(201).json(category);
-      }),
-    );
-
-    router.delete(
-      '/categories/:categoryId',
-      ...adminAuth,
-      validateRequest({ params: categoryIdParamSchema }),
-      asyncHandler(async (request, response) => {
-        await catalogService.deleteCategory(request.params.categoryId);
-        response.status(204).send();
-      }),
-    );
-  }
+  router.delete(
+    '/categories/:categoryId',
+    ...adminAuth,
+    validateRequest({ params: categoryIdParamSchema }),
+    asyncHandler(async (request, response) => {
+      await catalogService.deleteCategory(request.params.categoryId);
+      response.status(204).send();
+    }),
+  );
 
   return router;
 }

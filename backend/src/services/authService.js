@@ -41,8 +41,8 @@ async function verifyPassword(password, storedHash) {
  * создание сервиса аутентификации с jwt rs256 и ротацией refresh-токенов
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} deps.userRepository
- * @param {import('../repositories/interfaces/ISessionRepository').ISessionRepository} deps.sessionRepository
+ * @param {Object} deps.userRepository
+ * @param {Object} deps.sessionRepository
  * @param {AccessTokenIssuer} [deps.accessTokenIssuer]
  * @param {AccessTokenVerifier} [deps.accessTokenVerifier]
  * @param {SHA256OpaqueRefreshTokenCodec} [deps.refreshTokenCodec]
@@ -102,7 +102,7 @@ function createAuthService({
     const tokenExpiresAt = new Date(now + REFRESH_TOKEN_TTL_MS).toISOString();
 
     let user;
-    await runInTx(async (trx) => {
+    await runInTx(async () => {
       user = await userRepository.create({
         id: userId,
         email: email.trim().toLowerCase(),
@@ -110,7 +110,7 @@ function createAuthService({
         firstName,
         lastName,
         role: 'user',
-      }, trx);
+      });
 
       await sessionRepository.createAuthSession({
         sessionId,
@@ -121,7 +121,7 @@ function createAuthService({
         tokenId,
         tokenHash: opaqueRefresh.digest,
         tokenExpiresAt,
-      }, trx);
+      });
     });
 
     const accessToken = issuer.issue(
@@ -137,12 +137,7 @@ function createAuthService({
     };
   }
 
-  async function login({
-    email,
-    password,
-    deviceInfo = 'Browser/Client',
-    ipAddress = null,
-  }) {
+  async function login({ email, password, deviceInfo = 'Browser/Client', ipAddress = null }) {
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const user = await userRepository.findByEmail(normalizedEmail);
     if (!user) {
@@ -161,7 +156,7 @@ function createAuthService({
     const idleExpiresAt = new Date(now + REFRESH_TOKEN_TTL_MS).toISOString();
     const tokenExpiresAt = new Date(now + REFRESH_TOKEN_TTL_MS).toISOString();
 
-    await runInTx(async (trx) => {
+    await runInTx(async () => {
       await sessionRepository.createAuthSession({
         sessionId,
         userId: user.id,
@@ -171,7 +166,7 @@ function createAuthService({
         tokenId,
         tokenHash: opaqueRefresh.digest,
         tokenExpiresAt,
-      }, trx);
+      });
     });
 
     const accessToken = issuer.issue(
@@ -199,7 +194,9 @@ function createAuthService({
     const lookup = await sessionRepository.findRefreshTokenWithSession(digest);
 
     if (!lookup) {
-      throw new UnauthorizedError('Недействительный refresh-токен', { code: 'INVALID_REFRESH_TOKEN' });
+      throw new UnauthorizedError('Недействительный refresh-токен', {
+        code: 'INVALID_REFRESH_TOKEN',
+      });
     }
 
     const { token, session, user } = lookup;
@@ -231,7 +228,7 @@ function createAuthService({
     const newIdleExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString();
 
     try {
-      await runInTx(async (trx) => {
+      await runInTx(async () => {
         await sessionRepository.rotateRefreshToken({
           sessionId: session.id,
           currentTokenId: token.id,
@@ -239,7 +236,7 @@ function createAuthService({
           newTokenHash: replacementOpaque.digest,
           newExpiresAt,
           newIdleExpiresAt,
-        }, trx);
+        });
       });
     } catch (rotateErr) {
       if (rotateErr.code === 'REFRESH_TOKEN_REUSE_DETECTED') {

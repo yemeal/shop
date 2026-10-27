@@ -5,16 +5,20 @@ const json = (schema, description) => ({
 });
 
 const errorResponses = {
-  '400': json('Error', 'Некорректные данные или ошибка валидации'),
-  '401': json('Error', 'Требуется авторизация'),
-  '403': json('Error', 'Доступ запрещен'),
-  '404': json('Error', 'Ресурс не найден'),
-  '409': json('Error', 'Конфликт или нарушение ограничения базы данных'),
-  '500': json('Error', 'Внутренняя ошибка сервера'),
+  400: json('Error', 'Некорректные данные или ошибка валидации'),
+  401: json('Error', 'Требуется авторизация'),
+  403: json('Error', 'Доступ запрещен'),
+  404: json('Error', 'Ресурс не найден'),
+  409: json('Error', 'Конфликт или нарушение ограничения базы данных'),
+  500: json('Error', 'Внутренняя ошибка сервера'),
 };
 
 const paginationParameters = [
-  { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 } },
+  {
+    name: 'limit',
+    in: 'query',
+    schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+  },
   { name: 'offset', in: 'query', schema: { type: 'integer', minimum: 0, default: 0 } },
 ];
 
@@ -42,13 +46,16 @@ const paths = {
       tags: ['System'],
       summary: 'Проверка API и подключения к SQLite',
       responses: {
-        '200': json({
-          type: 'object',
-          properties: {
-            status: { type: 'string', example: 'ok' },
-            database: { type: 'string', example: 'ok' },
+        200: json(
+          {
+            type: 'object',
+            properties: {
+              status: { type: 'string', example: 'ok' },
+              database: { type: 'string', example: 'ok' },
+            },
           },
-        }, 'Сервис доступен'),
+          'Сервис доступен',
+        ),
       },
     },
   },
@@ -76,9 +83,9 @@ const paths = {
         },
       },
       responses: {
-        '201': json('AuthResponse', 'Успешная регистрация'),
-        '400': errorResponses['400'],
-        '409': errorResponses['409'],
+        201: json('AuthResponse', 'Успешная регистрация'),
+        400: errorResponses['400'],
+        409: errorResponses['409'],
       },
     },
   },
@@ -102,9 +109,9 @@ const paths = {
         },
       },
       responses: {
-        '200': json('AuthResponse', 'Успешный вход'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
+        200: json('AuthResponse', 'Успешный вход'),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
       },
     },
   },
@@ -113,7 +120,10 @@ const paths = {
       tags: ['Auth'],
       summary: 'Завершение текущей сессии',
       responses: {
-        '200': json({ type: 'object', properties: { message: { type: 'string' } } }, 'Сессия завершена'),
+        200: json(
+          { type: 'object', properties: { message: { type: 'string' } } },
+          'Сессия завершена',
+        ),
       },
     },
   },
@@ -123,8 +133,8 @@ const paths = {
       summary: 'Получить данные текущего пользователя',
       security: [{ BearerAuth: [] }, { CookieAuth: [] }],
       responses: {
-        '200': json({ type: 'object', properties: { user: ref('User') } }, 'Профиль пользователя'),
-        '401': errorResponses['401'],
+        200: json({ type: 'object', properties: { user: ref('User') } }, 'Профиль пользователя'),
+        401: errorResponses['401'],
       },
     },
   },
@@ -135,17 +145,30 @@ const paths = {
       tags: ['Catalog'],
       summary: 'Каталог активных товаров с фильтрацией, поиском и сортировкой',
       parameters: [
-        { name: 'search', in: 'query', description: 'Поиск по названию или артикулу', schema: { type: 'string' } },
+        {
+          name: 'search',
+          in: 'query',
+          description: 'Поиск по названию или артикулу',
+          schema: { type: 'string' },
+        },
         { name: 'categoryId', in: 'query', schema: { type: 'string' } },
         { name: 'minPrice', in: 'query', schema: { type: 'number' } },
         { name: 'maxPrice', in: 'query', schema: { type: 'number' } },
-        { name: 'sortBy', in: 'query', schema: { type: 'string', enum: ['created_at', 'price', 'name'], default: 'created_at' } },
-        { name: 'sortOrder', in: 'query', schema: { type: 'string', enum: ['asc', 'desc'], default: 'desc' } },
+        {
+          name: 'sortBy',
+          in: 'query',
+          schema: { type: 'string', enum: ['created_at', 'price', 'name'], default: 'created_at' },
+        },
+        {
+          name: 'sortOrder',
+          in: 'query',
+          schema: { type: 'string', enum: ['asc', 'desc'], default: 'desc' },
+        },
         ...paginationParameters,
       ],
       responses: {
-        '200': json(paginationSchema('Product'), 'Список товаров'),
-        '400': errorResponses['400'],
+        200: json(paginationSchema('Product'), 'Список товаров'),
+        400: errorResponses['400'],
       },
     },
     post: {
@@ -157,10 +180,10 @@ const paths = {
         content: { 'application/json': { schema: ref('ProductCreate') } },
       },
       responses: {
-        '201': json('ProductDetails', 'Товар создан'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
+        201: json('ProductDetails', 'Товар создан'),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
       },
     },
   },
@@ -170,8 +193,8 @@ const paths = {
       summary: 'Карточка товара',
       parameters: [pathParameter('productId')],
       responses: {
-        '200': json('ProductDetails', 'Товар найден'),
-        '404': errorResponses['404'],
+        200: json('ProductDetails', 'Товар найден'),
+        404: errorResponses['404'],
       },
     },
     patch: {
@@ -184,11 +207,11 @@ const paths = {
         content: { 'application/json': { schema: ref('ProductUpdate') } },
       },
       responses: {
-        '200': json('ProductDetails', 'Товар обновлен'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
+        200: json('ProductDetails', 'Товар обновлен'),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
       },
     },
     delete: {
@@ -197,10 +220,10 @@ const paths = {
       parameters: [pathParameter('productId')],
       security: [{ BearerAuth: [] }],
       responses: {
-        '204': { description: 'Товар удален' },
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
+        204: { description: 'Товар удален' },
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -210,8 +233,8 @@ const paths = {
       summary: 'Категории каталога',
       parameters: paginationParameters,
       responses: {
-        '200': json(paginationSchema('Category'), 'Список категорий'),
-        '400': errorResponses['400'],
+        200: json(paginationSchema('Category'), 'Список категорий'),
+        400: errorResponses['400'],
       },
     },
   },
@@ -221,17 +244,20 @@ const paths = {
       summary: 'Товары выбранной категории',
       parameters: [pathParameter('categoryId'), ...paginationParameters],
       responses: {
-        '200': json({
-          type: 'object',
-          properties: {
-            items: { type: 'array', items: ref('Product') },
-            total: { type: 'integer' },
-            limit: { type: 'integer' },
-            offset: { type: 'integer' },
+        200: json(
+          {
+            type: 'object',
+            properties: {
+              items: { type: 'array', items: ref('Product') },
+              total: { type: 'integer' },
+              limit: { type: 'integer' },
+              offset: { type: 'integer' },
+            },
           },
-        }, 'Категория и её товары'),
-        '400': errorResponses['400'],
-        '404': errorResponses['404'],
+          'Категория и её товары',
+        ),
+        400: errorResponses['400'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -243,8 +269,8 @@ const paths = {
       summary: 'Получить текущую корзину',
       parameters: [{ name: 'userId', in: 'query', schema: { type: 'string' } }],
       responses: {
-        '200': json('Cart', 'Содержимое корзины'),
-        '401': errorResponses['401'],
+        200: json('Cart', 'Содержимое корзины'),
+        401: errorResponses['401'],
       },
     },
     delete: {
@@ -252,7 +278,7 @@ const paths = {
       summary: 'Очистить корзину',
       parameters: [{ name: 'userId', in: 'query', schema: { type: 'string' } }],
       responses: {
-        '200': json('Cart', 'Корзина очищена'),
+        200: json('Cart', 'Корзина очищена'),
       },
     },
   },
@@ -277,9 +303,9 @@ const paths = {
         },
       },
       responses: {
-        '201': json('Cart', 'Товар добавлен в корзину'),
-        '400': errorResponses['400'],
-        '404': errorResponses['404'],
+        201: json('Cart', 'Товар добавлен в корзину'),
+        400: errorResponses['400'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -287,7 +313,10 @@ const paths = {
     patch: {
       tags: ['Cart'],
       summary: 'Изменить количество товара в корзине',
-      parameters: [pathParameter('productId'), { name: 'userId', in: 'query', schema: { type: 'string' } }],
+      parameters: [
+        pathParameter('productId'),
+        { name: 'userId', in: 'query', schema: { type: 'string' } },
+      ],
       requestBody: {
         required: true,
         content: {
@@ -301,16 +330,19 @@ const paths = {
         },
       },
       responses: {
-        '200': json('Cart', 'Количество обновлено'),
-        '400': errorResponses['400'],
+        200: json('Cart', 'Количество обновлено'),
+        400: errorResponses['400'],
       },
     },
     delete: {
       tags: ['Cart'],
       summary: 'Удалить товар из корзины',
-      parameters: [pathParameter('productId'), { name: 'userId', in: 'query', schema: { type: 'string' } }],
+      parameters: [
+        pathParameter('productId'),
+        { name: 'userId', in: 'query', schema: { type: 'string' } },
+      ],
       responses: {
-        '200': json('Cart', 'Товар удален из корзины'),
+        200: json('Cart', 'Товар удален из корзины'),
       },
     },
   },
@@ -332,8 +364,8 @@ const paths = {
         },
       },
       responses: {
-        '201': json('Order', 'Заказ успешно оформлен'),
-        '400': errorResponses['400'],
+        201: json('Order', 'Заказ успешно оформлен'),
+        400: errorResponses['400'],
       },
     },
   },
@@ -357,9 +389,9 @@ const paths = {
       ],
       security: [{ BearerAuth: [] }, { CookieAuth: [] }],
       responses: {
-        '200': json(paginationSchema('OrderSummary'), 'Список всех заказов магазина'),
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
+        200: json(paginationSchema('OrderSummary'), 'Список всех заказов магазина'),
+        401: errorResponses['401'],
+        403: errorResponses['403'],
       },
     },
     post: {
@@ -371,10 +403,10 @@ const paths = {
         content: { 'application/json': { schema: ref('OrderCreate') } },
       },
       responses: {
-        '201': json('Order', 'Заказ создан'),
-        '400': errorResponses['400'],
-        '404': errorResponses['404'],
-        '409': errorResponses['409'],
+        201: json('Order', 'Заказ создан'),
+        400: errorResponses['400'],
+        404: errorResponses['404'],
+        409: errorResponses['409'],
       },
     },
   },
@@ -384,8 +416,8 @@ const paths = {
       summary: 'Детали заказа',
       parameters: [pathParameter('orderId')],
       responses: {
-        '200': json('Order', 'Заказ найден'),
-        '404': errorResponses['404'],
+        200: json('Order', 'Заказ найден'),
+        404: errorResponses['404'],
       },
     },
   },
@@ -413,11 +445,11 @@ const paths = {
         },
       },
       responses: {
-        '200': json('Order', 'Статус заказа обновлен'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
+        200: json('Order', 'Статус заказа обновлен'),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -427,9 +459,9 @@ const paths = {
       summary: 'История заказов пользователя',
       parameters: [pathParameter('userId'), ...paginationParameters],
       responses: {
-        '200': json(paginationSchema('OrderSummary'), 'История заказов'),
-        '400': errorResponses['400'],
-        '404': errorResponses['404'],
+        200: json(paginationSchema('OrderSummary'), 'История заказов'),
+        400: errorResponses['400'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -441,11 +473,14 @@ const paths = {
       summary: 'Избранные товары пользователя',
       parameters: [pathParameter('userId')],
       responses: {
-        '200': json({
-          type: 'object',
-          properties: { items: { type: 'array', items: ref('Product') } },
-        }, 'Список избранного'),
-        '404': errorResponses['404'],
+        200: json(
+          {
+            type: 'object',
+            properties: { items: { type: 'array', items: ref('Product') } },
+          },
+          'Список избранного',
+        ),
+        404: errorResponses['404'],
       },
     },
     post: {
@@ -465,9 +500,9 @@ const paths = {
         },
       },
       responses: {
-        '201': json('Product', 'Товар добавлен в избранное'),
-        '200': json('Product', 'Товар уже был в избранном'),
-        '404': errorResponses['404'],
+        201: json('Product', 'Товар добавлен в избранное'),
+        200: json('Product', 'Товар уже был в избранном'),
+        404: errorResponses['404'],
       },
     },
   },
@@ -477,8 +512,8 @@ const paths = {
       summary: 'Удалить товар из избранного',
       parameters: [pathParameter('userId'), pathParameter('productId')],
       responses: {
-        '204': { description: 'Товар удалён из избранного' },
-        '404': errorResponses['404'],
+        204: { description: 'Товар удалён из избранного' },
+        404: errorResponses['404'],
       },
     },
   },
@@ -490,14 +525,17 @@ const paths = {
       summary: 'Список адресов доставки пользователя',
       parameters: [pathParameter('userId')],
       responses: {
-        '200': json({
-          type: 'object',
-          properties: { items: { type: 'array', items: ref('Address') } },
-        }, 'Список адресов доставки'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
+        200: json(
+          {
+            type: 'object',
+            properties: { items: { type: 'array', items: ref('Address') } },
+          },
+          'Список адресов доставки',
+        ),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
       },
     },
     post: {
@@ -513,11 +551,11 @@ const paths = {
         },
       },
       responses: {
-        '201': json('Address', 'Адрес успешно добавлен'),
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
+        201: json('Address', 'Адрес успешно добавлен'),
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
       },
     },
   },
@@ -527,12 +565,12 @@ const paths = {
       summary: 'Удалить адрес доставки',
       parameters: [pathParameter('userId'), pathParameter('addressId')],
       responses: {
-        '204': { description: 'Адрес успешно удалён' },
-        '400': errorResponses['400'],
-        '401': errorResponses['401'],
-        '403': errorResponses['403'],
-        '404': errorResponses['404'],
-        '409': errorResponses['409'],
+        204: { description: 'Адрес успешно удалён' },
+        400: errorResponses['400'],
+        401: errorResponses['401'],
+        403: errorResponses['403'],
+        404: errorResponses['404'],
+        409: errorResponses['409'],
       },
     },
   },
@@ -718,7 +756,10 @@ const schemas = {
       id: { type: 'string' },
       userId: { type: 'string' },
       deliveryAddressId: { type: 'string' },
-      status: { type: 'string', enum: ['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled'] },
+      status: {
+        type: 'string',
+        enum: ['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled'],
+      },
       total: { type: 'number' },
       itemsCount: { type: 'integer' },
       createdAt: { type: 'string' },
@@ -744,7 +785,8 @@ module.exports = {
   info: {
     title: 'Shop API (Clean Architecture)',
     version: '2.0.0',
-    description: 'REST API интернет-магазина: аутентификация, корзина, каталог, заказы, роли и избранное.',
+    description:
+      'REST API интернет-магазина: аутентификация, корзина, каталог, заказы, роли и избранное.',
   },
   servers: [{ url: 'http://localhost:3000/api', description: 'Локальный сервер' }],
   tags: [

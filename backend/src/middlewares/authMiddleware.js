@@ -8,7 +8,8 @@ function extractTokens(req) {
 
   // куки
   if (req.cookies) {
-    accessToken = req.cookies.access_token || req.cookies.session_token || req.cookies.token || null;
+    accessToken =
+      req.cookies.access_token || req.cookies.session_token || req.cookies.token || null;
     refreshToken = req.cookies.refresh_token || null;
   }
 

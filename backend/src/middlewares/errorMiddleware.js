@@ -12,7 +12,10 @@ function errorMiddleware(error, request, response, _next) {
   }
 
   // обработка ошибок ограничений sqlite без утечки структуры бд
-  if (error.code === 'SQLITE_CONSTRAINT' || (typeof error.code === 'string' && error.code.startsWith('SQLITE_CONSTRAINT_'))) {
+  if (
+    error.code === 'SQLITE_CONSTRAINT' ||
+    (typeof error.code === 'string' && error.code.startsWith('SQLITE_CONSTRAINT_'))
+  ) {
     return response.status(409).json({
       error: {
         code: ErrorCodes.DATABASE_CONSTRAINT,
@@ -21,9 +24,10 @@ function errorMiddleware(error, request, response, _next) {
     });
   }
 
-  const status = Number.isInteger(error.status) && error.status >= 400 && error.status < 600
-    ? error.status
-    : 500;
+  const status =
+    Number.isInteger(error.status) && error.status >= 400 && error.status < 600
+      ? error.status
+      : 500;
 
   const isInternal = status >= 500;
 
@@ -34,7 +38,9 @@ function errorMiddleware(error, request, response, _next) {
   const responseBody = {
     error: {
       code: error.code || (isInternal ? ErrorCodes.INTERNAL_ERROR : 'API_ERROR'),
-      message: isInternal ? 'Внутренняя ошибка сервера' : (error.message || 'Произошла ошибка при обработке запроса'),
+      message: isInternal
+        ? 'Внутренняя ошибка сервера'
+        : error.message || 'Произошла ошибка при обработке запроса',
     },
   };
 

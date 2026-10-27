@@ -6,9 +6,9 @@ const { ensureUser, mapAddress } = require('./shared');
  * Создание сервиса управления адресами доставки пользователей
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/IUserAddressRepository').IUserAddressRepository} deps.addressRepository
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} deps.userRepository
- * @param {import('../repositories/interfaces/ITransactionManager').ITransactionManager} [deps.transactionManager]
+ * @param {Object} deps.addressRepository
+ * @param {Object} deps.userRepository
+ * @param {Object} [deps.transactionManager]
  */
 function createAddressService({ addressRepository, userRepository, transactionManager = null }) {
   if (!addressRepository || !userRepository) {
@@ -78,15 +78,21 @@ function createAddressService({ addressRepository, userRepository, transactionMa
 
     await ensureUser(userRepository, userId);
 
-    const country = input.country !== undefined && input.country !== null && String(input.country).trim() !== ''
-      ? String(input.country).trim()
-      : 'Россия';
+    const country =
+      input.country !== undefined && input.country !== null && String(input.country).trim() !== ''
+        ? String(input.country).trim()
+        : 'Россия';
     const city = input.city !== undefined && input.city !== null ? String(input.city).trim() : '';
-    const street = input.street !== undefined && input.street !== null ? String(input.street).trim() : '';
-    const house = input.house !== undefined && input.house !== null ? String(input.house).trim() : '';
-    const apartment = input.apartment !== undefined && input.apartment !== null && String(input.apartment).trim() !== ''
-      ? String(input.apartment).trim()
-      : null;
+    const street =
+      input.street !== undefined && input.street !== null ? String(input.street).trim() : '';
+    const house =
+      input.house !== undefined && input.house !== null ? String(input.house).trim() : '';
+    const apartment =
+      input.apartment !== undefined &&
+      input.apartment !== null &&
+      String(input.apartment).trim() !== ''
+        ? String(input.apartment).trim()
+        : null;
 
     if (!city || !street || !house) {
       throw new ValidationError('Поля city, street и house обязательны для заполнения');
@@ -94,19 +100,16 @@ function createAddressService({ addressRepository, userRepository, transactionMa
 
     const id = 'addr-' + randomUUID();
 
-    const created = await runInTx(async (trx) => {
-      return addressRepository.createAddress(
-        {
-          id,
-          userId,
-          country,
-          city,
-          street,
-          house,
-          apartment,
-        },
-        trx,
-      );
+    const created = await runInTx(async () => {
+      return addressRepository.createAddress({
+        id,
+        userId,
+        country,
+        city,
+        street,
+        house,
+        apartment,
+      });
     });
 
     return mapAddress(created);
@@ -135,9 +138,9 @@ function createAddressService({ addressRepository, userRepository, transactionMa
     }
 
     try {
-      await runInTx(async (trx) => {
+      await runInTx(async () => {
         if (typeof addressRepository.deleteAddress === 'function') {
-          await addressRepository.deleteAddress(addressId, userId, trx);
+          await addressRepository.deleteAddress(addressId, userId);
         }
       });
     } catch (err) {
@@ -145,9 +148,7 @@ function createAddressService({ addressRepository, userRepository, transactionMa
         err.code === 'SQLITE_CONSTRAINT' ||
         (typeof err.code === 'string' && err.code.startsWith('SQLITE_CONSTRAINT_'))
       ) {
-        throw new ConflictError(
-          'Нельзя удалить адрес, который привязан к существующим заказам',
-        );
+        throw new ConflictError('Нельзя удалить адрес, который привязан к существующим заказам');
       }
       throw err;
     }

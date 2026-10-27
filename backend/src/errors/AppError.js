@@ -24,22 +24,33 @@ class NotFoundError extends ApiError {
 }
 
 class UnauthorizedError extends ApiError {
-  constructor(message = 'Требуется аутентификация', details = undefined, code = ErrorCodes.UNAUTHORIZED) {
-    const effectiveCode = (details && typeof details === 'object' && details.code) ? details.code : code;
+  constructor(
+    message = 'Требуется аутентификация',
+    details = undefined,
+    code = ErrorCodes.UNAUTHORIZED,
+  ) {
+    const effectiveCode =
+      details && typeof details === 'object' && details.code ? details.code : code;
     super(401, message, effectiveCode, details);
   }
 }
 
 class ForbiddenError extends ApiError {
   constructor(message = 'Доступ запрещен', details = undefined, code = ErrorCodes.FORBIDDEN) {
-    const effectiveCode = (details && typeof details === 'object' && details.code) ? details.code : code;
+    const effectiveCode =
+      details && typeof details === 'object' && details.code ? details.code : code;
     super(403, message, effectiveCode, details);
   }
 }
 
 class ConflictError extends ApiError {
-  constructor(message = 'Конфликт состояния ресурса', details = undefined, code = ErrorCodes.CONFLICT) {
-    const effectiveCode = (details && typeof details === 'object' && details.code) ? details.code : code;
+  constructor(
+    message = 'Конфликт состояния ресурса',
+    details = undefined,
+    code = ErrorCodes.CONFLICT,
+  ) {
+    const effectiveCode =
+      details && typeof details === 'object' && details.code ? details.code : code;
     super(409, message, effectiveCode, details);
   }
 }

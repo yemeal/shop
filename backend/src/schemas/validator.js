@@ -1,4 +1,3 @@
-const { z } = require('zod');
 const { ValidationError } = require('../errors');
 
 function formatZodIssue(issue) {
@@ -7,9 +6,11 @@ function formatZodIssue(issue) {
 
   let code = 'VALIDATION_ERROR';
   if (issue.code === 'too_small') {
-    code = issue.type === 'string' ? 'MIN_LENGTH' : (issue.type === 'array' ? 'MIN_ITEMS' : 'MIN_VALUE');
+    code =
+      issue.type === 'string' ? 'MIN_LENGTH' : issue.type === 'array' ? 'MIN_ITEMS' : 'MIN_VALUE';
   } else if (issue.code === 'too_big') {
-    code = issue.type === 'string' ? 'MAX_LENGTH' : (issue.type === 'array' ? 'MAX_ITEMS' : 'MAX_VALUE');
+    code =
+      issue.type === 'string' ? 'MAX_LENGTH' : issue.type === 'array' ? 'MAX_ITEMS' : 'MAX_VALUE';
   } else if (issue.code === 'invalid_type') {
     if (issue.received === 'undefined' || issue.received === 'null') {
       code = 'REQUIRED';
@@ -61,7 +62,11 @@ function validateRequest(schemas = {}) {
     }
 
     if (schemas.body) {
-      if (req.body === undefined || typeof req.body !== 'object' || (Array.isArray(req.body) && !schemas.bodyIsArray)) {
+      if (
+        req.body === undefined ||
+        typeof req.body !== 'object' ||
+        (Array.isArray(req.body) && !schemas.bodyIsArray)
+      ) {
         allErrors.push({
           field: 'body',
           code: 'INVALID_BODY',

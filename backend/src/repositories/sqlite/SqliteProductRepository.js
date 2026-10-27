@@ -1,21 +1,13 @@
-const { IProductRepository } = require('../interfaces/IProductRepository');
-
-class SqliteProductRepository extends IProductRepository {
+class SqliteProductRepository {
   /**
    * @param {import('sqlite').Database} db
    */
   constructor(db) {
-    super();
     this.db = db;
   }
 
-  _getExecutor(trx = null) {
-    return trx || this.db;
-  }
-
-  async findActiveById(id, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get(
+  async findActiveById(id) {
+    const row = await this.db.get(
       `SELECT id, sku, name, description, price, is_active, image_url, created_at, updated_at
        FROM products
        WHERE id = ? AND is_active = 1`,
@@ -24,9 +16,8 @@ class SqliteProductRepository extends IProductRepository {
     return row || null;
   }
 
-  async findById(id, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get(
+  async findById(id) {
+    const row = await this.db.get(
       `SELECT id, sku, name, description, price, is_active, image_url, created_at, updated_at
        FROM products
        WHERE id = ?`,
@@ -35,11 +26,10 @@ class SqliteProductRepository extends IProductRepository {
     return row || null;
   }
 
-  async findActiveByIds(ids, trx = null) {
+  async findActiveByIds(ids) {
     if (!ids || ids.length === 0) return [];
-    const executor = this._getExecutor(trx);
     const placeholders = ids.map(() => '?').join(', ');
-    const rows = await executor.all(
+    const rows = await this.db.all(
       `SELECT id, sku, name, description, price, is_active, image_url, created_at, updated_at
        FROM products
        WHERE id IN (${placeholders}) AND is_active = 1`,
@@ -58,8 +48,7 @@ class SqliteProductRepository extends IProductRepository {
     limit = 50,
     offset = 0,
     includeInactive = false,
-  } = {}, trx = null) {
-    const executor = this._getExecutor(trx);
+  } = {}) {
     const conditions = includeInactive ? [] : ['p.is_active = 1'];
     const params = [];
 
@@ -89,16 +78,20 @@ class SqliteProductRepository extends IProductRepository {
         .replace(/_/g, '\\_')
         .toLowerCase();
 
-      conditions.push("(p.search_text LIKE ? ESCAPE '\\' OR lower(p.name) LIKE ? ESCAPE '\\' OR lower(p.sku) LIKE ? ESCAPE '\\')");
+      conditions.push(
+        "(p.search_text LIKE ? ESCAPE '\\' OR lower(p.name) LIKE ? ESCAPE '\\' OR lower(p.sku) LIKE ? ESCAPE '\\')",
+      );
       params.push(`%${escapedSearch}%`, `%${escapedSearch}%`, `%${escapedSearch}%`);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    const safeSortBy = ['created_at', 'price', 'name'].includes(sortBy) ? `p.${sortBy}` : 'p.created_at';
+    const safeSortBy = ['created_at', 'price', 'name'].includes(sortBy)
+      ? `p.${sortBy}`
+      : 'p.created_at';
     const safeSortOrder = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
     const [rows, countRow] = await Promise.all([
-      executor.all(
+      this.db.all(
         `SELECT p.id, p.sku, p.name, p.description, p.price, p.is_active, p.image_url, p.created_at, p.updated_at
          FROM products p
          ${where}
@@ -108,7 +101,7 @@ class SqliteProductRepository extends IProductRepository {
         limit,
         offset,
       ),
-      executor.get(`SELECT COUNT(*) AS total FROM products p ${where}`, ...params),
+      this.db.get(`SELECT COUNT(*) AS total FROM products p ${where}`, ...params),
     ]);
 
     return {
@@ -117,14 +110,13 @@ class SqliteProductRepository extends IProductRepository {
     };
   }
 
-  async countProducts(filter = {}, trx = null) {
-    const res = await this.listProducts({ ...filter, limit: 1, offset: 0 }, trx);
+  async countProducts(filter = {}) {
+    const res = await this.listProducts({ ...filter, limit: 1, offset: 0 });
     return res.total;
   }
 
-  async getCategoriesForProduct(productId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const rows = await executor.all(
+  async getCategoriesForProduct(productId) {
+    const rows = await this.db.all(
       `SELECT c.id, c.name, c.parent_id
        FROM categories c
        JOIN product_categories pc ON pc.category_id = c.id
@@ -138,12 +130,10 @@ class SqliteProductRepository extends IProductRepository {
   async createProduct(
     { id, sku, name, description = null, price, isActive = 1, imageUrl = null },
     categoryIds = [],
-    trx = null,
   ) {
-    const executor = this._getExecutor(trx);
     const searchText = `${name || ''} ${sku || ''} ${description || ''}`.toLowerCase();
 
-    await executor.run(
+    await this.db.run(
       `INSERT INTO products (id, sku, name, description, price, is_active, image_url, search_text)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
@@ -162,18 +152,17 @@ class SqliteProductRepository extends IProductRepository {
       for (const catId of categoryIds) {
         params.push(id, catId);
       }
-      await executor.run(
+      await this.db.run(
         `INSERT OR IGNORE INTO product_categories (product_id, category_id) VALUES ${placeholders}`,
         ...params,
       );
     }
 
-    return this.findById(id, trx);
+    return this.findById(id);
   }
 
-  async updateProduct(id, updates = {}, categoryIds = undefined, trx = null) {
-    const executor = this._getExecutor(trx);
-    const existing = await this.findById(id, trx);
+  async updateProduct(id, updates = {}, categoryIds = undefined) {
+    const existing = await this.findById(id);
     const allowed = ['sku', 'name', 'description', 'price', 'is_active', 'image_url'];
     const sets = [];
     const params = [];
@@ -188,7 +177,8 @@ class SqliteProductRepository extends IProductRepository {
 
     const mergedName = updates.name !== undefined ? updates.name : existing?.name;
     const mergedSku = updates.sku !== undefined ? updates.sku : existing?.sku;
-    const mergedDesc = updates.description !== undefined ? updates.description : existing?.description;
+    const mergedDesc =
+      updates.description !== undefined ? updates.description : existing?.description;
     const searchText = `${mergedName || ''} ${mergedSku || ''} ${mergedDesc || ''}`.toLowerCase();
     sets.push('search_text = ?');
     params.push(searchText);
@@ -196,30 +186,29 @@ class SqliteProductRepository extends IProductRepository {
     if (sets.length > 0) {
       sets.push('updated_at = CURRENT_TIMESTAMP');
       params.push(id);
-      await executor.run(`UPDATE products SET ${sets.join(', ')} WHERE id = ?`, ...params);
+      await this.db.run(`UPDATE products SET ${sets.join(', ')} WHERE id = ?`, ...params);
     }
 
     if (Array.isArray(categoryIds)) {
-      await executor.run('DELETE FROM product_categories WHERE product_id = ?', id);
+      await this.db.run('DELETE FROM product_categories WHERE product_id = ?', id);
       if (categoryIds.length > 0) {
         const placeholders = categoryIds.map(() => '(?, ?)').join(', ');
         const catParams = [];
         for (const catId of categoryIds) {
           catParams.push(id, catId);
         }
-        await executor.run(
+        await this.db.run(
           `INSERT OR IGNORE INTO product_categories (product_id, category_id) VALUES ${placeholders}`,
           ...catParams,
         );
       }
     }
 
-    return this.findById(id, trx);
+    return this.findById(id);
   }
 
-  async deleteProduct(id, trx = null) {
-    const executor = this._getExecutor(trx);
-    const result = await executor.run('DELETE FROM products WHERE id = ?', id);
+  async deleteProduct(id) {
+    const result = await this.db.run('DELETE FROM products WHERE id = ?', id);
     return result.changes > 0;
   }
 }

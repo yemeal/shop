@@ -1,21 +1,13 @@
-const { IUserRepository } = require('../interfaces/IUserRepository');
-
-class SqliteUserRepository extends IUserRepository {
+class SqliteUserRepository {
   /**
    * @param {import('sqlite').Database} db
    */
   constructor(db) {
-    super();
     this.db = db;
   }
 
-  _getExecutor(trx = null) {
-    return trx || this.db;
-  }
-
-  async findById(id, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get(
+  async findById(id) {
+    const row = await this.db.get(
       `SELECT id, email, password_hash, first_name, last_name, role, created_at, updated_at
        FROM users WHERE id = ?`,
       id,
@@ -23,11 +15,10 @@ class SqliteUserRepository extends IUserRepository {
     return row || null;
   }
 
-  async findByEmail(email, trx = null) {
+  async findByEmail(email) {
     if (!email) return null;
-    const executor = this._getExecutor(trx);
     const normalized = email.trim().toLowerCase();
-    const row = await executor.get(
+    const row = await this.db.get(
       `SELECT id, email, password_hash, first_name, last_name, role, created_at, updated_at
        FROM users WHERE lower(email) = ? OR email = ?`,
       normalized,
@@ -36,15 +27,13 @@ class SqliteUserRepository extends IUserRepository {
     return row || null;
   }
 
-  async exists(id, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get('SELECT 1 FROM users WHERE id = ?', id);
+  async exists(id) {
+    const row = await this.db.get('SELECT 1 FROM users WHERE id = ?', id);
     return Boolean(row);
   }
 
-  async create({ id, email, passwordHash, firstName = null, lastName = null, role = 'user' }, trx = null) {
-    const executor = this._getExecutor(trx);
-    await executor.run(
+  async create({ id, email, passwordHash, firstName = null, lastName = null, role = 'user' }) {
+    await this.db.run(
       `INSERT INTO users (id, email, password_hash, first_name, last_name, role)
        VALUES (?, ?, ?, ?, ?, ?)`,
       id,
@@ -54,11 +43,10 @@ class SqliteUserRepository extends IUserRepository {
       lastName,
       role,
     );
-    return this.findById(id, trx);
+    return this.findById(id);
   }
 
-  async update(id, updates = {}, trx = null) {
-    const executor = this._getExecutor(trx);
+  async update(id, updates = {}) {
     const allowed = ['first_name', 'last_name', 'role'];
     const sets = [];
     const params = [];
@@ -71,13 +59,13 @@ class SqliteUserRepository extends IUserRepository {
       }
     }
 
-    if (sets.length === 0) return this.findById(id, trx);
+    if (sets.length === 0) return this.findById(id);
 
     sets.push('updated_at = CURRENT_TIMESTAMP');
     params.push(id);
 
-    await executor.run(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, ...params);
-    return this.findById(id, trx);
+    await this.db.run(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, ...params);
+    return this.findById(id);
   }
 }
 

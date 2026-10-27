@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { paginationQuerySchema, requiredIdParam } = require('./commonSchemas');
+const { requiredIdParam } = require('./commonSchemas');
 
 const listProductsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),

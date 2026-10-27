@@ -6,17 +6,6 @@ const test = require('node:test');
 
 const initDB = require('../db/db');
 const { createApp } = require('../src/app');
-const {
-  IUserRepository,
-  IUserAddressRepository,
-  IProductRepository,
-  ICategoryRepository,
-  IOrderRepository,
-  IFavouriteRepository,
-  ICartRepository,
-  ITransactionManager,
-  NotImplementedError,
-} = require('../src/repositories/interfaces');
 
 async function startTestServer() {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'shop-api-refactor-'));
@@ -57,10 +46,39 @@ test('Refactored Architecture & Repository Interface Conformance', async (t) => 
   // проверка соответствия репозиториев контрактам интерфейсов (JSDoc @implements)
   const contracts = {
     userRepository: ['findById', 'findByEmail', 'exists', 'create', 'update'],
-    addressRepository: ['findById', 'findByIdAndUserId', 'listByUserId', 'createAddress', 'deleteAddress'],
-    productRepository: ['findById', 'findActiveById', 'findActiveByIds', 'listProducts', 'createProduct', 'updateProduct', 'deleteProduct'],
-    categoryRepository: ['findById', 'listCategories', 'countCategories', 'createCategory', 'updateCategory', 'deleteCategory'],
-    orderRepository: ['createOrder', 'createOrderItems', 'findOrderById', 'findOrderItems', 'listOrdersByUserId', 'countOrdersByUserId', 'updateOrderStatus'],
+    addressRepository: [
+      'findById',
+      'findByIdAndUserId',
+      'listByUserId',
+      'createAddress',
+      'deleteAddress',
+    ],
+    productRepository: [
+      'findById',
+      'findActiveById',
+      'findActiveByIds',
+      'listProducts',
+      'createProduct',
+      'updateProduct',
+      'deleteProduct',
+    ],
+    categoryRepository: [
+      'findById',
+      'listCategories',
+      'countCategories',
+      'createCategory',
+      'updateCategory',
+      'deleteCategory',
+    ],
+    orderRepository: [
+      'createOrder',
+      'createOrderItems',
+      'findOrderById',
+      'findOrderItems',
+      'listOrdersByUserId',
+      'countOrdersByUserId',
+      'updateOrderStatus',
+    ],
     favouriteRepository: ['listFavourites', 'addFavourite', 'removeFavourite', 'isFavourite'],
     cartRepository: ['getCartByUserId', 'addItem', 'updateQuantity', 'removeItem', 'clearCart'],
     transactionManager: ['runInTransaction'],
@@ -69,7 +87,11 @@ test('Refactored Architecture & Repository Interface Conformance', async (t) => 
   for (const [repoName, methods] of Object.entries(contracts)) {
     assert.ok(repos[repoName], `Репозиторий ${repoName} должен быть зарегистрирован`);
     for (const method of methods) {
-      assert.equal(typeof repos[repoName][method], 'function', `${repoName} обязан реализовывать метод ${method}`);
+      assert.equal(
+        typeof repos[repoName][method],
+        'function',
+        `${repoName} обязан реализовывать метод ${method}`,
+      );
     }
   }
 
@@ -88,25 +110,26 @@ test('Unit of Work: Service layer wraps atomic repository operations in transact
   const txManager = server.app.locals.repositories.transactionManager;
   const userRepo = server.app.locals.repositories.userRepository;
 
-  await assert.rejects(
-    async () => {
-      await txManager.runInTransaction(async (trx) => {
-        await userRepo.create(
-          {
-            id: 'rollback-user',
-            email: 'rollback@example.com',
-            passwordHash: 'dummy',
-          },
-          trx,
-        );
-        throw new Error('Simulated business error');
-      });
-    },
-    /Simulated business error/,
-  );
+  await assert.rejects(async () => {
+    await txManager.runInTransaction(async (trx) => {
+      await userRepo.create(
+        {
+          id: 'rollback-user',
+          email: 'rollback@example.com',
+          passwordHash: 'dummy',
+        },
+        trx,
+      );
+      throw new Error('Simulated business error');
+    });
+  }, /Simulated business error/);
 
   const userAfterRollback = await userRepo.findById('rollback-user');
-  assert.equal(userAfterRollback, null, 'Сущность не должна быть сохранена в БД после отката транзакции');
+  assert.equal(
+    userAfterRollback,
+    null,
+    'Сущность не должна быть сохранена в БД после отката транзакции',
+  );
 });
 
 test('Standardized Error Responses with Machine-Readable Codes and Details', async (t) => {

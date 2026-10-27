@@ -1,4 +1,3 @@
-const interfaces = require('./interfaces');
 const { SqliteUserRepository } = require('./sqlite/SqliteUserRepository');
 const { SqliteSessionRepository } = require('./sqlite/SqliteSessionRepository');
 const { SqliteUserAddressRepository } = require('./sqlite/SqliteUserAddressRepository');
@@ -35,7 +34,6 @@ function createRepositories(db) {
 }
 
 module.exports = {
-  ...interfaces,
   SqliteUserRepository,
   SqliteSessionRepository,
   SqliteUserAddressRepository,

@@ -6,11 +6,11 @@ const { ensureUser, mapAddress, mapOrderSummary } = require('./shared');
  * создание сервиса заказов
  *
  * @param {Object} deps
- * @param {import('../repositories/interfaces/IOrderRepository').IOrderRepository} deps.orderRepository
- * @param {import('../repositories/interfaces/IProductRepository').IProductRepository} deps.productRepository
- * @param {import('../repositories/interfaces/IUserRepository').IUserRepository} deps.userRepository
- * @param {import('../repositories/interfaces/IUserAddressRepository').IUserAddressRepository} deps.addressRepository
- * @param {import('../repositories/interfaces/ITransactionManager').ITransactionManager} deps.transactionManager
+ * @param {Object} deps.orderRepository
+ * @param {Object} deps.productRepository
+ * @param {Object} deps.userRepository
+ * @param {Object} deps.addressRepository
+ * @param {Object} deps.transactionManager
  */
 function createOrderService({
   orderRepository,
@@ -26,7 +26,9 @@ function createOrderService({
     !addressRepository ||
     !transactionManager
   ) {
-    throw new Error('OrderService требует orderRepository, productRepository, userRepository, addressRepository и transactionManager');
+    throw new Error(
+      'OrderService требует orderRepository, productRepository, userRepository, addressRepository и transactionManager',
+    );
   }
 
   async function getOrder(orderId) {
@@ -82,17 +84,14 @@ function createOrderService({
   }
 
   async function createOrder(input) {
-    if (!input || typeof input !== 'object') {
-      throw new ValidationError('Тело запроса должно быть JSON-объектом');
-    }
-    if (!input.userId || typeof input.userId !== 'string') {
-      throw new ValidationError('Поле userId обязательно');
-    }
-    if (!input.deliveryAddressId || typeof input.deliveryAddressId !== 'string') {
-      throw new ValidationError('Поле deliveryAddressId обязательно');
-    }
-    if (!Array.isArray(input.items) || input.items.length === 0) {
-      throw new ValidationError('Заказ должен содержать хотя бы один товар');
+    if (
+      !input ||
+      !input.userId ||
+      !input.deliveryAddressId ||
+      !Array.isArray(input.items) ||
+      input.items.length === 0
+    ) {
+      throw new ValidationError('Некорректные данные для создания заказа');
     }
 
     await ensureUser(userRepository, input.userId);
@@ -112,12 +111,6 @@ function createOrderService({
       throw new ValidationError('Один товар нельзя добавить в заказ дважды');
     }
 
-    for (const item of input.items) {
-      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
-        throw new ValidationError('Количество товара должно быть положительным целым числом');
-      }
-    }
-
     const products = await productRepository.findActiveByIds(productIds);
     const productsById = new Map(products.map((p) => [p.id, p]));
 
@@ -128,16 +121,13 @@ function createOrderService({
 
     const orderId = randomUUID();
 
-    await transactionManager.runInTransaction(async (trx) => {
-      await orderRepository.createOrder(
-        {
-          id: orderId,
-          userId: input.userId,
-          deliveryAddressId: input.deliveryAddressId,
-          status: 'pending',
-        },
-        trx,
-      );
+    await transactionManager.runInTransaction(async () => {
+      await orderRepository.createOrder({
+        id: orderId,
+        userId: input.userId,
+        deliveryAddressId: input.deliveryAddressId,
+        status: 'pending',
+      });
 
       const orderItems = input.items.map((item) => ({
         id: randomUUID(),
@@ -147,7 +137,7 @@ function createOrderService({
         unitPrice: productsById.get(item.productId).price,
       }));
 
-      await orderRepository.createOrderItems(orderItems, trx);
+      await orderRepository.createOrderItems(orderItems);
     });
 
     return getOrder(orderId);

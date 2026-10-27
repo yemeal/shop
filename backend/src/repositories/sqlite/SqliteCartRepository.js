@@ -1,22 +1,15 @@
 const { randomUUID } = require('node:crypto');
-const { ICartRepository } = require('../interfaces/ICartRepository');
 
-class SqliteCartRepository extends ICartRepository {
+class SqliteCartRepository {
   /**
    * @param {import('sqlite').Database} db
    */
   constructor(db) {
-    super();
     this.db = db;
   }
 
-  _getExecutor(trx = null) {
-    return trx || this.db;
-  }
-
-  async getCartByUserId(userId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const rows = await executor.all(
+  async getCartByUserId(userId) {
+    const rows = await this.db.all(
       `SELECT ci.id, ci.user_id, ci.product_id, ci.quantity, ci.created_at, ci.updated_at,
               p.sku, p.name, p.price, p.is_active, p.image_url
        FROM cart_items ci
@@ -28,11 +21,10 @@ class SqliteCartRepository extends ICartRepository {
     return rows;
   }
 
-  async addItem(userId, productId, quantity = 1, trx = null) {
-    const executor = this._getExecutor(trx);
+  async addItem(userId, productId, quantity = 1) {
     const id = randomUUID();
     // атомарный upsert для предотвращения гонок
-    await executor.run(
+    await this.db.run(
       `INSERT INTO cart_items (id, user_id, product_id, quantity)
        VALUES (?, ?, ?, ?)
        ON CONFLICT(user_id, product_id) DO UPDATE SET
@@ -43,31 +35,29 @@ class SqliteCartRepository extends ICartRepository {
       productId,
       quantity,
     );
-    return executor.get(
+    return this.db.get(
       'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?',
       userId,
       productId,
     );
   }
 
-  async updateQuantity(userId, productId, quantity, trx = null) {
-    const executor = this._getExecutor(trx);
-    await executor.run(
+  async updateQuantity(userId, productId, quantity) {
+    await this.db.run(
       'UPDATE cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND product_id = ?',
       quantity,
       userId,
       productId,
     );
-    return executor.get(
+    return this.db.get(
       'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?',
       userId,
       productId,
     );
   }
 
-  async removeItem(userId, productId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const result = await executor.run(
+  async removeItem(userId, productId) {
+    const result = await this.db.run(
       'DELETE FROM cart_items WHERE user_id = ? AND product_id = ?',
       userId,
       productId,
@@ -75,9 +65,8 @@ class SqliteCartRepository extends ICartRepository {
     return result.changes > 0;
   }
 
-  async clearCart(userId, trx = null) {
-    const executor = this._getExecutor(trx);
-    await executor.run('DELETE FROM cart_items WHERE user_id = ?', userId);
+  async clearCart(userId) {
+    await this.db.run('DELETE FROM cart_items WHERE user_id = ?', userId);
   }
 }
 

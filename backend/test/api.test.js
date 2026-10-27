@@ -19,7 +19,9 @@ async function startTestServer() {
   return {
     url,
     async close() {
-      await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+      await new Promise((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       await db.close();
       await fs.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
     },
@@ -78,14 +80,26 @@ test('public API describes real shop scenarios and rejects unauthenticated priva
   assert.equal(unauthGetOrderRes.status, 401, 'GET /api/orders/:id должен требовать авторизацию');
 
   const unauthUserOrdersRes = await request('/api/users/demo-user/orders');
-  assert.equal(unauthUserOrdersRes.status, 401, 'GET /api/users/:id/orders должен требовать авторизацию');
+  assert.equal(
+    unauthUserOrdersRes.status,
+    401,
+    'GET /api/users/:id/orders должен требовать авторизацию',
+  );
 
   const unauthCartRes = await request('/api/cart');
   assert.equal(unauthCartRes.status, 401, 'GET /api/cart должен требовать авторизацию');
 
   const unauthFavouritesRes = await request('/api/users/demo-user/favourites');
-  assert.equal(unauthFavouritesRes.status, 401, 'GET /api/users/:id/favourites должен требовать авторизацию');
+  assert.equal(
+    unauthFavouritesRes.status,
+    401,
+    'GET /api/users/:id/favourites должен требовать авторизацию',
+  );
 
   const unauthAddressesRes = await request('/api/users/demo-user/addresses');
-  assert.equal(unauthAddressesRes.status, 401, 'GET /api/users/:id/addresses должен требовать авторизацию');
+  assert.equal(
+    unauthAddressesRes.status,
+    401,
+    'GET /api/users/:id/addresses должен требовать авторизацию',
+  );
 });

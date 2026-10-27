@@ -1,5 +1,5 @@
 const express = require('express');
-const { asyncHandler, ForbiddenError } = require('../errors');
+const { asyncHandler, ForbiddenError, UnauthorizedError } = require('../errors');
 const { validateRequest } = require('../middlewares');
 const { requireAuth } = require('../middlewares/authMiddleware');
 const { requireRole } = require('../middlewares/roleMiddleware');
@@ -10,16 +10,19 @@ const {
   adminOrderListQuerySchema,
 } = require('../schemas/orderSchemas');
 
-function createOrderRouter(orderService, authService = null) {
-  const router = express.Router();
+function createOrderRouter(orderService, authService) {
+  if (!orderService || !authService) {
+    throw new Error('createOrderRouter требует orderService и authService');
+  }
 
-  const authMiddleware = authService ? requireAuth(authService) : (_req, _res, next) => next();
+  const router = express.Router();
+  const auth = requireAuth(authService);
+  const adminAuth = [auth, requireRole('admin')];
 
   // получение списка всех заказов магазина (только для роли admin)
   router.get(
     '/',
-    authMiddleware,
-    ...(authService ? [requireRole('admin')] : []),
+    ...adminAuth,
     validateRequest({ query: adminOrderListQuerySchema }),
     asyncHandler(async (request, response) => {
       const result = await orderService.listAllOrders(request.query);
@@ -29,13 +32,18 @@ function createOrderRouter(orderService, authService = null) {
 
   router.post(
     '/',
-    authMiddleware,
+    auth,
     validateRequest({ body: createOrderBodySchema }),
     asyncHandler(async (request, response) => {
+      if (!request.user || !request.user.id) {
+        throw new UnauthorizedError('Требуется авторизация');
+      }
+
       // Идентификатор пользователя берется строго из сессии (или переопределяется только администратором)
-      const userId = (request.user && request.user.role === 'admin' && request.body.userId)
-        ? request.body.userId
-        : (request.user?.id || request.body.userId);
+      const userId =
+        request.user.role === 'admin' && request.body.userId
+          ? request.body.userId
+          : request.user.id;
 
       const order = await orderService.createOrder({
         ...request.body,
@@ -47,17 +55,13 @@ function createOrderRouter(orderService, authService = null) {
 
   router.get(
     '/:orderId',
-    authMiddleware,
+    auth,
     validateRequest({ params: orderIdParamSchema }),
     asyncHandler(async (request, response) => {
       const order = await orderService.getOrder(request.params.orderId);
 
       // защита от idor: только владелец заказа или администратор
-      if (
-        request.user &&
-        request.user.role !== 'admin' &&
-        order.userId !== request.user.id
-      ) {
+      if (request.user && request.user.role !== 'admin' && order.userId !== request.user.id) {
         throw new ForbiddenError('Доступ запрещен: нельзя просматривать чужой заказ');
       }
 
@@ -65,24 +69,21 @@ function createOrderRouter(orderService, authService = null) {
     }),
   );
 
-  if (authService) {
-    router.patch(
-      '/:orderId/status',
-      requireAuth(authService),
-      requireRole('admin'),
-      validateRequest({
-        params: orderIdParamSchema,
-        body: updateOrderStatusBodySchema,
-      }),
-      asyncHandler(async (request, response) => {
-        const order = await orderService.updateOrderStatus(
-          request.params.orderId,
-          request.body.status,
-        );
-        response.json(order);
-      }),
-    );
-  }
+  router.patch(
+    '/:orderId/status',
+    ...adminAuth,
+    validateRequest({
+      params: orderIdParamSchema,
+      body: updateOrderStatusBodySchema,
+    }),
+    asyncHandler(async (request, response) => {
+      const order = await orderService.updateOrderStatus(
+        request.params.orderId,
+        request.body.status,
+      );
+      response.json(order);
+    }),
+  );
 
   return router;
 }

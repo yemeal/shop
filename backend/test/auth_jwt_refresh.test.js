@@ -97,7 +97,11 @@ test('RS256 JWT Access Token and Opaque Refresh Token with TokenFamily Rotation'
   assert.deepEqual(Object.keys(refreshBody), ['user'], 'Body must contain ONLY user on refresh');
   assert.equal(refreshBody.accessToken, undefined);
   assert.equal(refreshBody.refreshToken, undefined);
-  assert.notEqual(refreshedCookies.refresh_token, registerCookies.refresh_token, 'Refresh token must rotate to a new random string');
+  assert.notEqual(
+    refreshedCookies.refresh_token,
+    registerCookies.refresh_token,
+    'Refresh token must rotate to a new random string',
+  );
   assert.ok(refreshedCookies.access_token);
   assert.ok(refreshedCookies.refresh_token);
 
@@ -168,7 +172,11 @@ test('Automatic Transparent Access Refresh when Access Token is Expired', async 
   const cookies = parseCookies(autoRefreshRes);
   assert.ok(cookies.access_token);
   assert.ok(cookies.refresh_token);
-  assert.notEqual(cookies.refresh_token, loginCookies.refresh_token, 'Refresh token must be rotated');
+  assert.notEqual(
+    cookies.refresh_token,
+    loginCookies.refresh_token,
+    'Refresh token must be rotated',
+  );
 });
 
 test('Multi-Device Token Family Independence', async (t) => {
@@ -176,10 +184,6 @@ test('Multi-Device Token Family Independence', async (t) => {
   t.after(() => server.close());
 
   const request = (route, options) => fetch(`${server.url}${route}`, options);
-  const json = (body) => ({
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
 
   // устройство а
   const deviceARes = await request('/api/auth/login', {
@@ -201,7 +205,11 @@ test('Multi-Device Token Family Independence', async (t) => {
   const deviceB = await deviceBRes.json();
   assert.deepEqual(Object.keys(deviceB), ['user']);
 
-  assert.notEqual(deviceACookies.refresh_token, deviceBCookies.refresh_token, 'Each device must receive its own session and TokenFamily in cookies');
+  assert.notEqual(
+    deviceACookies.refresh_token,
+    deviceBCookies.refresh_token,
+    'Each device must receive its own session and TokenFamily in cookies',
+  );
 
   // выход с устройства а
   const logoutARes = await request('/api/auth/logout', {

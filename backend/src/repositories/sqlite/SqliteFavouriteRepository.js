@@ -1,21 +1,13 @@
-const { IFavouriteRepository } = require('../interfaces/IFavouriteRepository');
-
-class SqliteFavouriteRepository extends IFavouriteRepository {
+class SqliteFavouriteRepository {
   /**
    * @param {import('sqlite').Database} db
    */
   constructor(db) {
-    super();
     this.db = db;
   }
 
-  _getExecutor(trx = null) {
-    return trx || this.db;
-  }
-
-  async listFavourites(userId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const rows = await executor.all(
+  async listFavourites(userId) {
+    const rows = await this.db.all(
       `SELECT p.id, p.sku, p.name, p.description, p.price, p.is_active, p.image_url,
               p.created_at, p.updated_at, f.created_at AS favourite_created_at
        FROM favourite_user_products f
@@ -27,9 +19,8 @@ class SqliteFavouriteRepository extends IFavouriteRepository {
     return rows;
   }
 
-  async addFavourite(userId, productId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const result = await executor.run(
+  async addFavourite(userId, productId) {
+    const result = await this.db.run(
       'INSERT OR IGNORE INTO favourite_user_products (product_id, user_id) VALUES (?, ?)',
       productId,
       userId,
@@ -37,9 +28,8 @@ class SqliteFavouriteRepository extends IFavouriteRepository {
     return { created: result.changes === 1 };
   }
 
-  async removeFavourite(userId, productId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const result = await executor.run(
+  async removeFavourite(userId, productId) {
+    const result = await this.db.run(
       'DELETE FROM favourite_user_products WHERE product_id = ? AND user_id = ?',
       productId,
       userId,
@@ -47,9 +37,8 @@ class SqliteFavouriteRepository extends IFavouriteRepository {
     return result.changes > 0;
   }
 
-  async isFavourite(userId, productId, trx = null) {
-    const executor = this._getExecutor(trx);
-    const row = await executor.get(
+  async isFavourite(userId, productId) {
+    const row = await this.db.get(
       'SELECT 1 FROM favourite_user_products WHERE product_id = ? AND user_id = ?',
       productId,
       userId,

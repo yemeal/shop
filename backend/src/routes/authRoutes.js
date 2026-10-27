@@ -1,7 +1,11 @@
 const express = require('express');
 const { asyncHandler, UnauthorizedError } = require('../errors');
 const { validateRequest, requireAuth } = require('../middlewares');
-const { setAuthCookies, clearAuthCookies, extractTokens } = require('../middlewares/authMiddleware');
+const {
+  setAuthCookies,
+  clearAuthCookies,
+  extractTokens,
+} = require('../middlewares/authMiddleware');
 const { registerBodySchema, loginBodySchema } = require('../schemas/authSchemas');
 
 function createAuthRouter(authService) {
