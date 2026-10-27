@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+const jwt = require('jsonwebtoken');
 const { randomUUID } = require('node:crypto');
 
 class TokenIssuanceError extends Error {
@@ -15,7 +15,7 @@ class AccessTokenIssuer {
    * @param {string} [options.keyId='key-1'] - Key ID
    * @param {string} [options.issuer='shop-api'] - Token issuer
    * @param {string} [options.audience='shop-client'] - Token audience
-   * @param {number} [options.expiresInSeconds=900] - Default TTL (15 minutes = 900s)
+   * @param {number} [options.expiresInSeconds=900] - Default TTL
    */
   constructor({
     privateKey,
@@ -32,44 +32,28 @@ class AccessTokenIssuer {
     this.expiresInSeconds = expiresInSeconds;
   }
 
-  /**
-   * выпуск jwt с подписью rs256
-   *
-   * @param {Object} principal
-   * @param {string} principal.userId
-   * @param {string} principal.role
-   * @param {number} [customTtlSeconds]
-   * @returns {string} Encoded JWT
-   */
   issue(principal, customTtlSeconds = null) {
     try {
       const ttl = customTtlSeconds !== null ? customTtlSeconds : this.expiresInSeconds;
-      const now = Math.floor(Date.now() / 1000);
-      const expiresAt = now + ttl;
-
-      const header = {
-        alg: 'RS256',
-        typ: 'at+jwt',
-        kid: this.keyId,
-      };
-
-      const payload = {
-        iss: this.issuer,
-        sub: principal.userId,
-        aud: this.audience,
-        iat: now,
-        exp: expiresAt,
-        jti: randomUUID(),
-        role: principal.role || 'user',
-      };
-
-      const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
-      const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-      const dataToSign = `${headerB64}.${payloadB64}`;
-
-      const signature = crypto.sign('sha256', Buffer.from(dataToSign), this.privateKey).toString('base64url');
-
-      return `${dataToSign}.${signature}`;
+      return jwt.sign(
+        {
+          role: principal.role || 'user',
+        },
+        this.privateKey,
+        {
+          algorithm: 'RS256',
+          keyid: this.keyId,
+          header: {
+            typ: 'at+jwt',
+            kid: this.keyId,
+          },
+          issuer: this.issuer,
+          audience: this.audience,
+          subject: principal.userId,
+          jwtid: randomUUID(),
+          expiresIn: ttl,
+        },
+      );
     } catch (err) {
       throw new TokenIssuanceError(err.message);
     }

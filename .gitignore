@@ -15,6 +15,10 @@ yarn-error.log*
 *.db-shm
 *.db-wal
 
+# Cryptographic keys and secrets
+keys/
+*.pem
+
 # Build outputs
 dist/
 *.tsbuildinfo
